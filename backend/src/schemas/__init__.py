@@ -19,6 +19,9 @@ from backend.src.schemas.production_task import (
     ProductionTaskBase,
     ProductionTaskRead,
     ProductionTaskUpdate,
+    TaskStartPayload,
+    TaskCompletePayload,
+    TaskFailPayload,
 )
 from backend.src.schemas.manufacturing_route import (
     ManufacturingRouteBase,
@@ -55,6 +58,9 @@ __all__ = [
     "ProductionTaskBase",
     "ProductionTaskRead",
     "ProductionTaskUpdate",
+    "TaskStartPayload",
+    "TaskCompletePayload",
+    "TaskFailPayload",
     "ManufacturingRouteBase",
     "ManufacturingRouteCreate",
     "ManufacturingRouteRead",
