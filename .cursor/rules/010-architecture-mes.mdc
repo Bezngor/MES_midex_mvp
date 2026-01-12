@@ -1,0 +1,84 @@
+---
+name: 010-architecture-mes
+description: Project-wide architecture and workflow rules for the MES SaaS platform
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Project Overview
+
+- This repository contains a modular SaaS **MES platform** for discrete manufacturing.
+- Core stack: **FastAPI + SQLAlchemy + PostgreSQL** for backend, **React + TypeScript** for frontend, **n8n** for orchestration, **Power BI** for analytics.
+- Domain is expressed in MES terms: ManufacturingOrder, WorkCenter, ProductionTask, RouteOperation, Genealogy, WIP.
+
+# Architecture Rules
+
+- Use a layered structure:
+
+  - `backend/src/models/` — domain and DB models.
+  - `backend/src/routes/` — HTTP API endpoints.
+  - `backend/src/services/` — business logic and orchestration.
+  - `backend/src/db/` — DB session, migrations, schemas.
+  - `frontend/src/components/` — reusable UI components.
+  - `frontend/src/pages/` — page-level layouts.
+  - `frontend/src/services/` — API clients.
+  - `n8n-workflows/` — exported n8n workflows as JSON.
+  - `docs/` — architecture and domain documentation.
+
+- Follow **domain-driven design**:
+  - Start with the **domain model** (MES entities).
+  - Then define **DB schema**.
+  - Then add **API layer**.
+  - Then implement **services** (business logic).
+  - Finally, create **frontend components** and **tests**.
+
+- Prefer cohesive modules:
+  - One main responsibility per file.
+  - Shared logic in `services/`, not inside routes or components.
+
+# Process for New Features
+
+When implementing a new feature (entity, module, workflow):
+
+1. Update / consult domain docs in `docs/`:
+   - `DOMAIN_MODEL.md`
+   - `API_SPEC.md`
+   - `DATABASE_SCHEMA.md`
+2. Create or extend models in `backend/src/models/`.
+3. Add migrations in `backend/src/db/migrations/`.
+4. Add or extend routes in `backend/src/routes/`.
+5. Add or extend services in `backend/src/services/`.
+6. Create / update frontend components and pages in `frontend/src/`.
+7. Add or update tests.
+8. Update docs if the public API or behavior changes.
+
+# Naming Conventions
+
+- Database:
+  - Use `snake_case` for tables and columns.
+  - Table names are plural: `manufacturing_orders`, `work_centers`, `production_tasks`.
+- Python:
+  - Use PEP8 (snake_case for functions, PascalCase for classes).
+- TypeScript / React:
+  - Use `PascalCase` for components.
+  - Use `camelCase` for variables, functions, and props.
+- MES domain:
+  - Use explicit MES terms: `ManufacturingOrder`, `WorkCenter`, `ProductionTask`, `RouteOperation`, `GenealogyRecord`.
+
+# Error Handling & Logging
+
+- On the backend:
+  - Log errors with enough context (entity ID, operation type, status).
+  - Use structured JSON logging for important events (task dispatched, task completed, order status changed).
+  - Return clear error messages to API clients, but do not leak sensitive details.
+- On the frontend:
+  - Show user-friendly messages.
+  - Use consistent toast/notification component for success and errors.
+
+# Testing
+
+- Add unit tests for **services** (business logic).
+- Add integration tests for **API routes**.
+- Prefer small, focused tests over large, complex ones.
+- Ensure critical MES flows (order creation, dispatching, completion, genealogy) have at least basic test coverage.

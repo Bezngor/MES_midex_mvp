@@ -1,0 +1,154 @@
+---
+name: 030-frontend-react
+description: Frontend rules for React + TypeScript UI in MES SaaS platform
+globs:
+  - "frontend/src/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Frontend Stack
+
+- React + TypeScript.
+- State management: Zustand (or similar lightweight store).
+- HTTP client: Axios or Fetch wrapper.
+- Styling: Tailwind CSS or CSS Modules (be consistent across project).
+
+# Structure (Frontend)
+
+- `frontend/src/components/` — reusable UI components (cards, forms, tables).
+- `frontend/src/pages/` — pages that compose components into full views.
+- `frontend/src/services/api.ts` — API client functions.
+- `frontend/src/stores/` — Zustand stores (orders, tasks, work centers, UI state).
+- `frontend/src/hooks/` — custom hooks (e.g., `useOrders`, `useTasks`).
+
+# General Rules
+
+- Each React component in its own file, default export.
+- Keep components focused and small; factor out subcomponents if needed.
+- Use **function components** with hooks; do not use class components.
+- Types:
+  - Use TypeScript interfaces/types for props.
+  - Reuse generated or shared DTO types where possible (aligned with backend schemas).
+
+# MES UI Concepts
+
+Provide clear MES-oriented UI components:
+
+- `OrderForm` — create manufacturing orders.
+- `OrderList` — list and filter orders by status.
+- `WIPDashboard` — visualize Work-in-Process and task queues.
+- `TaskCard` — show details of a single ProductionTask.
+- `TaskDetails` — show full history and genealogy for a task.
+- `WorkCenterStatusPanel` — state of each work center.
+- `QualityForm` — capture quality inspection data.
+
+# API Integration
+
+- All API calls go through `frontend/src/services/api.ts`.
+- Handle error cases and map backend envelopes `{ success, data, error }` to UI states.
+- Do not hardcode URLs inside components; inject them via api module or environment variables.
+
+# Example: MES Frontend Component
+
+Use this pattern when generating new React components.
+
+```tsx
+import React, { useState } from "react";
+import { createOrder } from "../services/api";
+
+interface OrderFormProps {
+  onCreated?: () => void;
+}
+
+export const OrderForm: React.FC<OrderFormProps> = ({ onCreated }) => {
+  const [productId, setProductId] = useState("");
+  const [quantity, setQuantity] = useState<number>(1);
+  const [orderNumber, setOrderNumber] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await createOrder({
+        productId,
+        quantity,
+        orderNumber,
+        dueDate,
+      });
+
+      if (!response.success) {
+        setError(response.error ?? "Failed to create manufacturing order");
+      } else if (onCreated) {
+        onCreated();
+      }
+    } catch (e) {
+      setError("Unexpected error while creating manufacturing order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-md bg-white">
+      <h2 className="text-lg font-semibold">Create Manufacturing Order</h2>
+
+      {error && <div className="text-red-600 text-sm">{error}</div>}
+
+      <div>
+        <label className="block text-sm mb-1">Product ID</label>
+        <input
+          className="w-full border rounded px-2 py-1"
+          value={productId}
+          onChange={(e) => setProductId(e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Quantity</label>
+        <input
+          type="number"
+          className="w-full border rounded px-2 py-1"
+          value={quantity}
+          min={1}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Order Number</label>
+        <input
+          className="w-full border rounded px-2 py-1"
+          value={orderNumber}
+          onChange={(e) => setOrderNumber(e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm mb-1">Due Date</label>
+        <input
+          type="date"
+          className="w-full border rounded px-2 py-1"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+      >
+        {isSubmitting ? "Creating..." : "Create Order"}
+      </button>
+    </form>
+  );
+};
