@@ -6,8 +6,10 @@ from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
+from typing import List
 
 from backend.src.models.enums import OrderStatus
+from backend.src.schemas.production_task import ProductionTaskRead
 
 
 class ManufacturingOrderBase(BaseModel):
@@ -32,6 +34,14 @@ class ManufacturingOrderRead(ManufacturingOrderBase):
     status: OrderStatus
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ManufacturingOrderWithTasksRead(ManufacturingOrderRead):
+    """Schema for reading a ManufacturingOrder with associated ProductionTasks."""
+
+    production_tasks: List[ProductionTaskRead] = []
 
     model_config = ConfigDict(from_attributes=True)
 

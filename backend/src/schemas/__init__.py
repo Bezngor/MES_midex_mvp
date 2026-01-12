@@ -6,6 +6,7 @@ from backend.src.schemas.manufacturing_order import (
     ManufacturingOrderBase,
     ManufacturingOrderCreate,
     ManufacturingOrderRead,
+    ManufacturingOrderWithTasksRead,
     ManufacturingOrderUpdate,
 )
 from backend.src.schemas.work_center import (
@@ -45,6 +46,7 @@ __all__ = [
     "ManufacturingOrderBase",
     "ManufacturingOrderCreate",
     "ManufacturingOrderRead",
+    "ManufacturingOrderWithTasksRead",
     "ManufacturingOrderUpdate",
     "WorkCenterBase",
     "WorkCenterCreate",
