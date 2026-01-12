@@ -86,6 +86,30 @@ MES_midex/
    uvicorn backend.src.main:app --reload
    ```
 
+## Database Migrations
+
+The project uses Alembic for database migrations. Migrations are located in `backend/src/db/migrations/`.
+
+### Running Migrations
+
+To run migrations (inside Docker container or local environment):
+
+```bash
+# From project root
+cd backend
+alembic upgrade head
+```
+
+To create a new migration:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "description of changes"
+alembic upgrade head
+```
+
+**Note**: Make sure the database is running before executing migrations. The migration scripts will automatically create all required tables, indexes, and constraints.
+
 ## API Endpoints
 
 Base URL: `/api/v1`
