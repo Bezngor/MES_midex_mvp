@@ -17,11 +17,35 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create enum types
-    op.execute("CREATE TYPE orderstatus AS ENUM ('PLANNED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED')")
-    op.execute("CREATE TYPE taskstatus AS ENUM ('QUEUED', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED')")
-    op.execute("CREATE TYPE workcenterstatus AS ENUM ('AVAILABLE', 'BUSY', 'MAINTENANCE', 'DOWN')")
-    op.execute("CREATE TYPE qualitystatus AS ENUM ('PENDING', 'PASSED', 'FAILED', 'REWORK')")
+    # Create enum types (if they don't exist)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE orderstatus AS ENUM ('PLANNED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE taskstatus AS ENUM ('QUEUED', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE workcenterstatus AS ENUM ('AVAILABLE', 'BUSY', 'MAINTENANCE', 'DOWN');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE qualitystatus AS ENUM ('PENDING', 'PASSED', 'FAILED', 'REWORK');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
 
     # Create work_centers table
     op.create_table(
@@ -29,7 +53,7 @@ def upgrade() -> None:
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, nullable=False),
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('resource_type', sa.String(), nullable=False),
-        sa.Column('status', sa.Enum('AVAILABLE', 'BUSY', 'MAINTENANCE', 'DOWN', name='workcenterstatus'), nullable=False),
+        sa.Column('status', postgresql.ENUM('AVAILABLE', 'BUSY', 'MAINTENANCE', 'DOWN', name='workcenterstatus', create_type=False), nullable=False),
         sa.Column('capacity_units_per_hour', sa.Numeric(10, 2), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
@@ -53,7 +77,7 @@ def upgrade() -> None:
         sa.Column('order_number', sa.String(), unique=True, nullable=False),
         sa.Column('product_id', sa.String(), nullable=False),
         sa.Column('quantity', sa.Numeric(10, 2), nullable=False),
-        sa.Column('status', sa.Enum('PLANNED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED', name='orderstatus'), nullable=False),
+        sa.Column('status', postgresql.ENUM('PLANNED', 'RELEASED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED', name='orderstatus', create_type=False), nullable=False),
         sa.Column('due_date', sa.DateTime(timezone=True), nullable=False),
         sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
         sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
@@ -81,7 +105,7 @@ def upgrade() -> None:
         sa.Column('order_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('operation_id', postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column('work_center_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('status', sa.Enum('QUEUED', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED', name='taskstatus'), nullable=False),
+        sa.Column('status', postgresql.ENUM('QUEUED', 'IN_PROGRESS', 'COMPLETED', 'FAILED', 'CANCELLED', name='taskstatus', create_type=False), nullable=False),
         sa.Column('assigned_to', sa.String(), nullable=True),
         sa.Column('started_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('completed_at', sa.DateTime(timezone=True), nullable=True),
@@ -116,7 +140,7 @@ def upgrade() -> None:
         sa.Column('inspector_id', sa.String(), nullable=False),
         sa.Column('inspection_timestamp', sa.DateTime(timezone=True), nullable=False),
         sa.Column('measurements', postgresql.JSONB(), nullable=True),
-        sa.Column('status', sa.Enum('PENDING', 'PASSED', 'FAILED', 'REWORK', name='qualitystatus'), nullable=False),
+        sa.Column('status', postgresql.ENUM('PENDING', 'PASSED', 'FAILED', 'REWORK', name='qualitystatus', create_type=False), nullable=False),
         sa.Column('notes', sa.String(), nullable=True),
         sa.ForeignKeyConstraint(['task_id'], ['production_tasks.id'], ondelete='CASCADE'),
     )

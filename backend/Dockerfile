@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 # Copy dependency files
 COPY pyproject.toml ./
 
+# Copy Alembic configuration
+COPY alembic.ini ./backend/
+
 # Copy application code (maintain backend/src structure)
 COPY src/ ./backend/src/
 
