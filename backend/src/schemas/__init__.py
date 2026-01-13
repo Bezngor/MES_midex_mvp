@@ -32,6 +32,13 @@ from backend.src.schemas.route_operation import (
     RouteOperationBase,
     RouteOperationCreate,
     RouteOperationRead,
+    RouteOperationUpdate,
+)
+from backend.src.schemas.manufacturing_route import (
+    ManufacturingRouteBase,
+    ManufacturingRouteCreate,
+    ManufacturingRouteRead,
+    ManufacturingRouteWithOperationsRead,
 )
 from backend.src.schemas.genealogy_record import (
     GenealogyRecordBase,
@@ -67,6 +74,11 @@ __all__ = [
     "RouteOperationBase",
     "RouteOperationCreate",
     "RouteOperationRead",
+    "RouteOperationUpdate",
+    "ManufacturingRouteBase",
+    "ManufacturingRouteCreate",
+    "ManufacturingRouteRead",
+    "ManufacturingRouteWithOperationsRead",
     "GenealogyRecordBase",
     "GenealogyRecordCreate",
     "GenealogyRecordRead",

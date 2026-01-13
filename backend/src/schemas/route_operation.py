@@ -28,3 +28,12 @@ class RouteOperationRead(RouteOperationBase):
     id: UUID
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class RouteOperationUpdate(BaseModel):
+    """Schema for updating a RouteOperation."""
+
+    operation_sequence: int | None = Field(None, ge=1)
+    operation_name: str | None = None
+    work_center_id: UUID | None = None
+    estimated_duration_minutes: int | None = Field(None, gt=0)
