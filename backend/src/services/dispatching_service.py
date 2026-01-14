@@ -12,7 +12,7 @@
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select, and_, or_
 
 from backend.src.models.production_task import ProductionTask
@@ -312,11 +312,19 @@ class DispatchingService:
             - Задачи планируются последовательно (без пересечений)
             - Учитывается доступность рабочего центра (8 часов/день для MVP)
         """
-        # Строим запрос
-        query = self.db.query(ProductionTask).filter(
-            or_(
-                ProductionTask.status == TaskStatus.IN_PROGRESS,
-                ProductionTask.status == TaskStatus.QUEUED
+        # Строим запрос с eager loading для избежания N+1 проблем
+        query = (
+            self.db.query(ProductionTask)
+            .options(
+                joinedload(ProductionTask.manufacturing_order),
+                joinedload(ProductionTask.route_operation),
+                joinedload(ProductionTask.work_center)
+            )
+            .filter(
+                or_(
+                    ProductionTask.status == TaskStatus.IN_PROGRESS,
+                    ProductionTask.status == TaskStatus.QUEUED
+                )
             )
         )
 
@@ -335,22 +343,28 @@ class DispatchingService:
         }
 
         # Получаем приоритет из заказа
+        # Используем уже загруженный manufacturing_order через relationship
         tasks_with_priority = []
         for task in tasks:
-            order = self.db.get(ManufacturingOrder, task.order_id)
             priority = None
-            if order and order.priority:
+            # Используем relationship вместо отдельного запроса
+            if task.manufacturing_order and task.manufacturing_order.priority:
                 try:
-                    priority = OrderPriority(order.priority)
-                except ValueError:
+                    priority = OrderPriority(task.manufacturing_order.priority)
+                except (ValueError, AttributeError):
                     priority = None
             tasks_with_priority.append((task, priority))
 
+        # Сортируем задачи: сначала по приоритету (высший первым), затем по времени начала
+        # Для задач без started_at используем datetime.max для сортировки в конец
+        from datetime import timezone
+        max_datetime = datetime.max.replace(tzinfo=timezone.utc)
+        
         tasks_sorted = sorted(
             tasks_with_priority,
             key=lambda t: (
                 -priority_rank.get(t[1], 0),
-                t[0].started_at or datetime.max
+                t[0].started_at if t[0].started_at else max_datetime
             )
         )
 
@@ -370,15 +384,26 @@ class DispatchingService:
             elif task.manufacturing_order:
                 task_name = f"Производство {task.manufacturing_order.order_number}"
 
+            # Безопасное получение work_center_id и имени
+            work_center_id_val = task.work_center_id
+            work_center_name = "Не назначен"
+            if task.work_center:
+                work_center_name = task.work_center.name
+            elif work_center_id_val:
+                # Если work_center не загружен, но ID есть, пытаемся загрузить
+                work_center = self.db.get(WorkCenter, work_center_id_val)
+                if work_center:
+                    work_center_name = work_center.name
+
             schedule.append({
                 "task_id": task.id,
                 "task_name": task_name,
-                "work_center_id": task.work_center_id,
-                "work_center_name": task.work_center.name if task.work_center else "Не назначен",
+                "work_center_id": work_center_id_val,
+                "work_center_name": work_center_name,
                 "priority": priority.value if priority else "NORMAL",
                 "scheduled_start": task.started_at,
                 "scheduled_end": task.completed_at,
-                "duration_hours": duration,
+                "duration_hours": round(duration, 2),
                 "status": task.status.value
             })
 
@@ -401,52 +426,64 @@ class DispatchingService:
 
         Бизнес-правила:
             - Загрузка = (сумма часов активных задач / доступные часы мощности) * 100
-            - Активные задачи: IN_PROGRESS, QUEUED (если назначены)
+            - Активные задачи: только IN_PROGRESS (диспетчеризованные задачи)
+            - QUEUED задачи НЕ учитываются (они еще не запланированы)
+            - Используется estimated_duration_minutes из RouteOperation
+            - Учитывается parallel_capacity рабочего центра
             - Доступная мощность: 8 часов/смена (MVP)
             - Может превышать 100% (указывает на перегрузку)
         """
         date = date or datetime.utcnow()
 
+        # Получаем рабочий центр
+        work_center = self.db.get(WorkCenter, work_center_id)
+        if not work_center:
+            return 0.0
+
         # Получаем активные задачи для рабочего центра на дату
+        # Учитываем ТОЛЬКО задачи со статусом IN_PROGRESS (диспетчеризованные)
+        # QUEUED задачи не учитываются, так как они еще не запланированы
         start_of_day = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end_of_day = start_of_day + timedelta(days=1)
 
-        # Получаем задачи, которые либо имеют scheduled_start в диапазоне дат,
-        # либо назначены на рабочий центр (для QUEUED задач без scheduled_start)
-        tasks = self.db.query(ProductionTask).filter(
-            ProductionTask.work_center_id == work_center_id,
-            or_(
+        # Получаем только диспетчеризованные задачи (IN_PROGRESS)
+        # Важно: QUEUED задачи НЕ учитываются, так как они еще не запланированы
+        # Загружаем связанные данные (route_operation) для получения estimated_duration_minutes
+        tasks = (
+            self.db.query(ProductionTask)
+            .options(joinedload(ProductionTask.route_operation))
+            .filter(
+                ProductionTask.work_center_id == work_center_id,
                 ProductionTask.status == TaskStatus.IN_PROGRESS,
-                ProductionTask.status == TaskStatus.QUEUED
+                ProductionTask.started_at.isnot(None),  # Только задачи с запланированным временем
+                ProductionTask.started_at >= start_of_day,
+                ProductionTask.started_at < end_of_day
             )
-        ).all()
+            .all()
+        )
 
-        # Фильтруем по дате в Python, так как started_at может быть None
-        tasks_in_range = []
-        for task in tasks:
-            if task.started_at:
-                if start_of_day <= task.started_at < end_of_day:
-                    tasks_in_range.append(task)
-            elif task.status == TaskStatus.QUEUED:
-                # Для QUEUED задач без scheduled_start считаем их на указанную дату
-                # (если дата сегодня или в будущем)
-                if date.date() >= datetime.utcnow().date():
-                    tasks_in_range.append(task)
-
-        tasks = tasks_in_range
-
-        # Рассчитываем общее количество часов
+        # Рассчитываем общее количество часов для всех задач
         total_hours = 0
         for task in tasks:
             if task.started_at and task.completed_at:
+                # Используем запланированное время, если оно есть
                 duration = (task.completed_at - task.started_at).total_seconds() / 3600
                 total_hours += duration
+            elif task.route_operation and task.route_operation.estimated_duration_minutes:
+                # Используем estimated_duration из операции маршрута
+                duration_minutes = task.route_operation.estimated_duration_minutes
+                duration = duration_minutes / 60.0
+                total_hours += duration
             else:
-                # Если время не задано, используем значение по умолчанию
+                # Fallback: используем значение по умолчанию только если нет других данных
+                # Но это не должно происходить для диспетчеризованных задач
                 total_hours += 8
 
-        # Доступная мощность (MVP: 8 часов/смена)
-        available_hours = 8
+        # Доступная мощность с учетом parallel_capacity
+        # Если parallel_capacity = 2, то можно обрабатывать 2 задачи параллельно
+        # Доступные часы = 8 часов * parallel_capacity
+        parallel_capacity = work_center.parallel_capacity if work_center.parallel_capacity else 1
+        available_hours = 8 * parallel_capacity  # 8 часов/смена * количество параллельных задач
 
         # Рассчитываем использование
         utilization = (total_hours / available_hours) * 100 if available_hours > 0 else 0
