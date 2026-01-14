@@ -19,6 +19,7 @@
   - `test_work_center_capacity.py` - тесты модели WorkCenterCapacity (4 теста)
 - `services/` - unit-тесты для сервисов:
   - `test_mrp_service.py` - тесты MRPService (35 тестов)
+  - `test_dispatching_service.py` - тесты DispatchingService (40 тестов)
 - `api/` - интеграционные тесты для новых API endpoints:
   - `test_products_api.py` - тесты API продуктов (9 тестов)
   - `test_bom_api.py` - тесты API спецификаций (6 тестов)
@@ -26,6 +27,7 @@
   - `test_inventory_api.py` - тесты API остатков (7 тестов)
   - `test_work_center_capacities_api.py` - тесты API мощностей РЦ (7 тестов)
   - `test_mrp_api.py` - тесты MRP API (13 тестов)
+  - `test_dispatching_api.py` - тесты Dispatching API (12 тестов)
 
 ## Установка зависимостей
 
@@ -183,13 +185,85 @@ python -m pytest --cov=src --cov-report=term-missing
 12. `test_explode_bom_api_validation_error` - ошибка валидации
 13. `test_net_requirement_api_validation_error` - ошибка валидации
 
+## Описание Dispatching тестов
+
+### DispatchingService Unit Tests (40 тестов)
+
+#### Выпуск заказа (7 тестов)
+1. `test_release_order_planned_to_released` - выпуск из PLANNED в RELEASED
+2. `test_release_order_creates_tasks` - создание ProductionTask
+3. `test_release_order_with_route_operations` - создание задач из операций маршрута
+4. `test_release_order_not_found` - ошибка при отсутствии заказа
+5. `test_release_order_already_released` - ошибка при уже выпущенном заказе
+6. `test_release_order_with_custom_date` - выпуск с кастомной датой
+7. `test_release_order_no_route` - ошибка при отсутствии маршрута
+
+#### Диспетчеризация задач (7 тестов)
+1. `test_dispatch_task_queued_to_in_progress` - диспетчеризация QUEUED → IN_PROGRESS
+2. `test_dispatch_task_calculates_duration_from_operation` - расчёт длительности из операции
+3. `test_dispatch_task_fallback_to_8_hours` - fallback на 8 часов
+4. `test_dispatch_task_not_found` - ошибка при отсутствии задачи
+5. `test_dispatch_task_work_center_not_found` - ошибка при отсутствии РЦ
+6. `test_dispatch_task_already_dispatched` - ошибка при уже диспетчеризованной задаче
+7. `test_dispatch_task_capacity_exceeded` - ошибка при превышении мощности
+
+#### Расписание задач (6 тестов)
+1. `test_schedule_tasks_returns_list` - возврат списка задач
+2. `test_schedule_tasks_priority_ordering` - сортировка по приоритету
+3. `test_schedule_tasks_eager_loading` - eager loading (нет N+1)
+4. `test_schedule_tasks_filter_by_work_center` - фильтрация по РЦ
+5. `test_schedule_tasks_excludes_completed` - исключение COMPLETED
+6. `test_schedule_tasks_handles_missing_work_center_relationship` - обработка отсутствующего relationship
+
+#### Загрузка рабочего центра (6 тестов)
+1. `test_calculate_work_center_load_no_tasks` - без задач
+2. `test_calculate_work_center_load_single_task` - одна задача
+3. `test_calculate_work_center_load_with_parallel_capacity` - с parallel_capacity
+4. `test_calculate_work_center_load_overloaded` - перегрузка (>100%)
+5. `test_calculate_work_center_load_ignores_queued` - игнорирование QUEUED
+6. `test_calculate_work_center_load_different_date` - расчёт для конкретной даты
+
+#### Данные Ганта (4 теста)
+1. `test_get_gantt_data_structure` - структура данных
+2. `test_get_gantt_data_with_tasks` - данные с задачами
+3. `test_get_gantt_data_filter_by_work_center` - фильтрация по РЦ
+4. `test_get_gantt_data_date_range` - диапазон дат
+
+#### Поиск доступного РЦ (3 теста)
+1. `test_find_available_work_center_no_capacity` - нет мощности
+2. `test_find_available_work_center_with_capacity` - с мощностью
+3. `test_find_available_work_center_overloaded` - перегруженный РЦ
+
+#### Preview диспетчеризации (3 теста)
+1. `test_dispatch_tasks_returns_queued_tasks` - возврат QUEUED задач
+2. `test_dispatch_tasks_excludes_down_centers` - исключение DOWN центров
+3. `test_get_dispatch_preview_by_work_center` - группировка по РЦ
+
+### Dispatching API Integration Tests (12 тестов)
+
+1. `test_release_order_api` - выпуск заказа через API
+2. `test_release_order_api_not_found` - невалидный ID
+3. `test_release_order_api_already_released` - уже выпущенный заказ
+4. `test_dispatch_task_api` - диспетчеризация задачи через API
+5. `test_dispatch_task_api_not_found` - невалидный task ID
+6. `test_get_schedule_api` - получение расписания
+7. `test_get_schedule_api_filter_work_center` - фильтрация по РЦ
+8. `test_get_work_center_load_api` - загрузка РЦ
+9. `test_get_work_center_load_api_with_task` - загрузка с задачей
+10. `test_get_gantt_data_api` - данные Ганта
+11. `test_get_gantt_data_api_with_date_range` - данные с диапазоном дат
+12. `test_release_order_with_route_api` - выпуск с маршрутом
+13. `test_preview_dispatch_api` - preview диспетчеризации
+
 ## Статистика тестов
 
-- **Всего тестов:** 124 (48 MRP, 60 Iteration 2.0, 16 MVP v1.0)
+- **Всего тестов:** 173 (49 Dispatching, 48 MRP, 60 Iteration 2.0, 16 MVP v1.0)
 - **Unit-тесты моделей:** 25 тестов
-- **Unit-тесты сервисов:** 35 тестов (MRPService)
-- **Интеграционные API-тесты:** 49 тестов (36 Iteration 2.0 + 13 MRP)
+- **Unit-тесты сервисов:** 75 тестов (40 DispatchingService, 35 MRPService)
+- **Интеграционные API-тесты:** 61 тестов (12 Dispatching + 13 MRP + 36 Iteration 2.0)
 - **Покрытие кода:** 
+  - DispatchingService: **90%** ✅
+  - Dispatching API routes: **93%** ✅
   - MRPService: **95%** ✅
   - MRP API routes: **79%**
-  - Общее покрытие новых моделей и API: **~80%+**
+  - Общее покрытие новых моделей и API: **~85%+**
