@@ -1,5 +1,5 @@
 """
-Pydantic schemas / DTOs for API validation and serialization.
+Pydantic-схемы / DTO для API.
 """
 
 from backend.src.schemas.manufacturing_order import (
@@ -27,18 +27,13 @@ from backend.src.schemas.manufacturing_route import (
     ManufacturingRouteBase,
     ManufacturingRouteCreate,
     ManufacturingRouteRead,
+    ManufacturingRouteWithOperationsRead,
 )
 from backend.src.schemas.route_operation import (
     RouteOperationBase,
     RouteOperationCreate,
     RouteOperationRead,
     RouteOperationUpdate,
-)
-from backend.src.schemas.manufacturing_route import (
-    ManufacturingRouteBase,
-    ManufacturingRouteCreate,
-    ManufacturingRouteRead,
-    ManufacturingRouteWithOperationsRead,
 )
 from backend.src.schemas.genealogy_record import (
     GenealogyRecordBase,
@@ -51,6 +46,11 @@ from backend.src.schemas.quality_inspection import (
     QualityInspectionRead,
     QualityInspectionUpdate,
 )
+from backend.src.schemas.product import ProductCreate, ProductUpdate, ProductResponse
+from backend.src.schemas.bom import BOMCreate, BOMResponse
+from backend.src.schemas.batch import BatchCreate, BatchUpdate, BatchResponse
+from backend.src.schemas.inventory import InventoryResponse, InventoryAdjust
+from backend.src.schemas.work_center_capacity import CapacityCreate, CapacityResponse
 
 __all__ = [
     "ManufacturingOrderBase",
@@ -71,14 +71,11 @@ __all__ = [
     "ManufacturingRouteBase",
     "ManufacturingRouteCreate",
     "ManufacturingRouteRead",
+    "ManufacturingRouteWithOperationsRead",
     "RouteOperationBase",
     "RouteOperationCreate",
     "RouteOperationRead",
     "RouteOperationUpdate",
-    "ManufacturingRouteBase",
-    "ManufacturingRouteCreate",
-    "ManufacturingRouteRead",
-    "ManufacturingRouteWithOperationsRead",
     "GenealogyRecordBase",
     "GenealogyRecordCreate",
     "GenealogyRecordRead",
@@ -86,4 +83,16 @@ __all__ = [
     "QualityInspectionCreate",
     "QualityInspectionRead",
     "QualityInspectionUpdate",
+    "ProductCreate",
+    "ProductUpdate",
+    "ProductResponse",
+    "BOMCreate",
+    "BOMResponse",
+    "BatchCreate",
+    "BatchUpdate",
+    "BatchResponse",
+    "InventoryResponse",
+    "InventoryAdjust",
+    "CapacityCreate",
+    "CapacityResponse",
 ]

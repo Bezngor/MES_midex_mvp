@@ -31,7 +31,8 @@ def test_create_order_api(client, sample_route):
     assert data["success"] is True
     assert data["data"]["order_number"] == "API-ORDER-001"
     assert data["data"]["status"] == "PLANNED"
-    assert data["data"]["quantity"] == 10.0
+    # Decimal сериализуется как строка в JSON
+    assert float(data["data"]["quantity"]) == 10.0
 
 
 def test_get_order_api(client, sample_route):

@@ -75,30 +75,27 @@ def test_create_order_route_not_found(test_db):
 def test_create_order_invalid_quantity(test_db, sample_route):
     """
     Тест валидации количества (quantity <= 0).
+    Pydantic валидирует на уровне схемы, поэтому проверяем ValidationError.
     """
-    service = OrderService(test_db)
+    from pydantic import ValidationError
     
-    # Тест с quantity = 0
-    payload_zero = ManufacturingOrderCreate(
-        product_id="TEST-PROD-001",
-        quantity=Decimal("0.0"),
-        order_number="TEST-ORDER-003",
-        due_date=datetime(2026, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
-    )
+    # Тест с quantity = 0 - Pydantic валидирует на уровне схемы
+    with pytest.raises(ValidationError):
+        ManufacturingOrderCreate(
+            product_id="TEST-PROD-001",
+            quantity=Decimal("0.0"),
+            order_number="TEST-ORDER-003",
+            due_date=datetime(2026, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+        )
     
-    with pytest.raises(ValueError, match="Quantity must be greater than 0"):
-        service.create_order_with_tasks(payload_zero)
-    
-    # Тест с отрицательным quantity
-    payload_negative = ManufacturingOrderCreate(
-        product_id="TEST-PROD-001",
-        quantity=Decimal("-5.0"),
-        order_number="TEST-ORDER-004",
-        due_date=datetime(2026, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
-    )
-    
-    with pytest.raises(ValueError, match="Quantity must be greater than 0"):
-        service.create_order_with_tasks(payload_negative)
+    # Тест с отрицательным quantity - Pydantic валидирует на уровне схемы
+    with pytest.raises(ValidationError):
+        ManufacturingOrderCreate(
+            product_id="TEST-PROD-001",
+            quantity=Decimal("-5.0"),
+            order_number="TEST-ORDER-004",
+            due_date=datetime(2026, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+        )
 
 
 def test_get_order_with_tasks(test_db, sample_route):

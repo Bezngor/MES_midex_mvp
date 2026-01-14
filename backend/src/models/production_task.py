@@ -1,10 +1,10 @@
 """
-SQLAlchemy model for ProductionTask.
+SQLAlchemy-модель для ProductionTask.
 """
 
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, Index
+from sqlalchemy import Column, String, DateTime, Enum, ForeignKey, Index, Numeric, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -13,7 +13,7 @@ from backend.src.models.enums import TaskStatus
 
 
 class ProductionTask(Base):
-    """Production task model."""
+    """Модель производственной задачи."""
 
     __tablename__ = "production_tasks"
 
@@ -25,6 +25,12 @@ class ProductionTask(Base):
     assigned_to = Column(String, nullable=True)
     started_at = Column(DateTime(timezone=True), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Расширения для process manufacturing
+    batch_id = Column(UUID(as_uuid=True), ForeignKey("batches.id"), nullable=True, index=True)
+    quantity_kg = Column(Numeric(10, 2), nullable=True)
+    quantity_pcs = Column(Integer, nullable=True)
+
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -32,6 +38,7 @@ class ProductionTask(Base):
     manufacturing_order = relationship("ManufacturingOrder", back_populates="production_tasks")
     route_operation = relationship("RouteOperation", back_populates="production_tasks")
     work_center = relationship("WorkCenter", back_populates="production_tasks")
+    batch = relationship("Batch", back_populates="tasks")
     genealogy_records = relationship("GenealogyRecord", back_populates="production_task", cascade="all, delete-orphan")
     quality_inspections = relationship("QualityInspection", back_populates="production_task", cascade="all, delete-orphan")
 
@@ -42,5 +49,6 @@ class ProductionTask(Base):
         Index("idx_production_tasks_task_id", "id"),  # For genealogy and quality lookups
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Текстовое представление производственной задачи."""
         return f"<ProductionTask(id={self.id}, status={self.status}, work_center_id={self.work_center_id})>"

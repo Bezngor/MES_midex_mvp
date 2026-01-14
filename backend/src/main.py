@@ -6,7 +6,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.src.db.session import Base
-from backend.src.routes import health, orders, tasks, work_centers, dispatch, manufacturing_routes, operations
+from backend.src.routes import (
+    health,
+    orders,
+    tasks,
+    work_centers,
+    dispatch,
+    manufacturing_routes,
+    operations,
+    products,
+    bom,
+    batches,
+    inventory,
+    work_center_capacities,
+)
 
 # Create database tables (for development only, use migrations in production)
 # Base.metadata.create_all(bind=engine)
@@ -36,6 +49,11 @@ app.include_router(work_centers.router, tags=["work-centers"])
 app.include_router(dispatch.router, tags=["dispatch"])
 app.include_router(manufacturing_routes.router, tags=["manufacturing-routes"])
 app.include_router(operations.router, tags=["route-operations"])
+app.include_router(products.router, tags=["products"])
+app.include_router(bom.router, tags=["bill-of-materials"])
+app.include_router(batches.router, tags=["batches"])
+app.include_router(inventory.router, tags=["inventory"])
+app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
 
 
 @app.get("/")
