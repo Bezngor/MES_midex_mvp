@@ -51,6 +51,16 @@ from backend.src.schemas.bom import BOMCreate, BOMResponse
 from backend.src.schemas.batch import BatchCreate, BatchUpdate, BatchResponse
 from backend.src.schemas.inventory import InventoryResponse, InventoryAdjust
 from backend.src.schemas.work_center_capacity import CapacityCreate, CapacityResponse
+from backend.src.schemas.mrp import (
+    ConsolidateOrdersRequest,
+    ConsolidateOrdersResponse,
+    ExplodeBOMRequest,
+    ExplodeBOMResponse,
+    NetRequirementRequest,
+    NetRequirementResponse,
+    CreateBulkOrderRequest,
+    CreateBulkOrderResponse,
+)
 
 __all__ = [
     "ManufacturingOrderBase",
@@ -95,4 +105,12 @@ __all__ = [
     "InventoryAdjust",
     "CapacityCreate",
     "CapacityResponse",
+    "ConsolidateOrdersRequest",
+    "ConsolidateOrdersResponse",
+    "ExplodeBOMRequest",
+    "ExplodeBOMResponse",
+    "NetRequirementRequest",
+    "NetRequirementResponse",
+    "CreateBulkOrderRequest",
+    "CreateBulkOrderResponse",
 ]

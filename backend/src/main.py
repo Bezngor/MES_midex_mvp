@@ -19,6 +19,7 @@ from backend.src.routes import (
     batches,
     inventory,
     work_center_capacities,
+    mrp,
 )
 
 # Create database tables (for development only, use migrations in production)
@@ -54,6 +55,7 @@ app.include_router(bom.router, tags=["bill-of-materials"])
 app.include_router(batches.router, tags=["batches"])
 app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
+app.include_router(mrp.router, tags=["MRP"])
 
 
 @app.get("/")

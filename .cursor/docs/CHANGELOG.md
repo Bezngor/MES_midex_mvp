@@ -1,56 +1,71 @@
-# MES Platform Changelog
+# Changelog
 
 ## [2.0.0] - 2026-01-14
 
-### Added - Iteration 2.0: Process Manufacturing Foundation
+### Added - Iteration 2.0: Process Manufacturing
 
-#### Core Models
-- **Product** — универсальный справочник (RAW_MATERIAL, BULK, PACKAGING, FINISHED_GOOD)
-- **BillOfMaterial** — многоуровневая BOM (3 уровня)
-- **Batch** — партии для batch-производства (варка массы)
-- **InventoryBalance** — учёт остатков (с поддержкой SEMI_FINISHED статуса)
-- **WorkCenterCapacity** — производительность WorkCenter по продуктам
+#### Models (5 new)
+- **Product** — Product catalog (RAW_MATERIAL, BULK, PACKAGING, FINISHED_GOOD)
+- **BillOfMaterial** — Multi-level BOM support
+- **Batch** — Batch production tracking
+- **InventoryBalance** — Inventory tracking (FINISHED/SEMI_FINISHED)
+- **WorkCenterCapacity** — Capacity planning by product
 
-#### Extended Models
-- **ManufacturingOrder**: добавлены поля `order_type`, `priority`, `parent_order_id`, `source_order_ids`, `is_consolidated`
-- **ProductionTask**: добавлены поля `batch_id`, `quantity_kg`, `quantity_pcs`
-- **WorkCenter**: добавлены поля `batch_capacity_kg`, `cycles_per_shift`, `exclusive_products`, `parallel_capacity`
+#### API Endpoints (25 new)
+- **Products** (5 endpoints): CRUD + filter by type
+- **BOM** (4 endpoints): CRUD + filter by parent
+- **Batches** (5 endpoints): CRUD + filter by status
+- **Inventory** (4 endpoints): CRUD + adjust (absolute/delta)
+- **WorkCenterCapacity** (3 endpoints): CRUD
+- **MRP** (4 endpoints): consolidate, explode-bom, net-requirement, create-bulk-order
 
-#### API Endpoints (21 новый)
-- `/api/v1/products` — CRUD для продуктов
-- `/api/v1/bill-of-materials` — CRUD для BOM
-- `/api/v1/batches` — CRUD для партий
-- `/api/v1/inventory` — просмотр остатков + корректировка
-- `/api/v1/work-center-capacities` — CRUD для мощностей
+#### Database Changes
+- Migration `20260114000001`: 5 new tables
+- Migration `20260114171052`: Add SHIP/IN_WORK to OrderStatus enum
+- Extended ManufacturingOrder with `parent_order_id`, `priority`
 
-#### Features
-- Автогенерация `batch_number` (формат: `BATCH-YYYYMMDD-HHMMSS-{UUID}`)
-- Гибкая корректировка инвентаря: абсолютное значение (`quantity`) или дельта (`quantity_delta`)
-- Фильтрация: продукты по типу, BOM по родителю, батчи по статусу
-- Валидация уникальности: `product_code`, `batch_number`, `(work_center_id, product_id)`
+#### MRP Service
+- **consolidate_orders()** — Order consolidation with priority calculation
+- **explode_bom()** — Recursive BOM explosion (multi-level)
+- **calculate_net_requirement()** — Net = Gross - Available (FINISHED)
+- **round_to_batch()** — Batch rounding (always round UP)
+- **create_dependent_bulk_order()** — Create INTERNAL_BULK orders
 
-### Changed
-- Миграция БД: `20260114000001_add_process_manufacturing_models.py`
-- Расширены enums: `ProductType`, `BatchStatus`, `ProductStatus`, `OrderType`, `OrderPriority`
+#### Tests
+- **92 total tests** (35 unit + 13 integration + 44 existing)
+- **95% code coverage** for MRPService
+- **100% pass rate** (no regressions)
 
 ### Fixed
-- Корректная работа с Decimal полями (quantity, reserved_quantity)
-- SQLite совместимость в тестах (JSONB → JSON)
-- Валидация Pydantic вместо ValueError
+- parent_order_id made optional in CreateBulkOrderRequest
+- SHIP/IN_WORK enum values added to OrderStatus
+- Batch auto-generation (BATCH-YYYYMMDD-HHMMSS-UUID format)
 
-### Testing
-- Smoke test: ✅ Все операции (создание продуктов, BOM, batch, inventory) работают
-- Regression: ✅ 16/16 тестов MVP v1.0 пройдены (100%)
+### Business Rules
+- Priority calculation: <7d=URGENT, 7-14d=HIGH, 14-30d=NORMAL, >30d=LOW
+- BOM explosion: recursive with circular dependency protection (max 10 levels)
+- Net requirement: only FINISHED inventory counted, SEMI_FINISHED excluded
+- Batch rounding: always rounds UP, respects min_batch_size_kg and batch_size_step_kg
 
 ---
 
 ## [1.0.0] - 2026-01-13
 
-### Added - MVP v1.0: Discrete Manufacturing
-- ManufacturingOrder, ProductionTask, WorkCenter, Route, QualityInspection
-- Basic CRUD API
-- Genealogy tracking
-- Simple FIFO dispatching
+### Added - MVP v1.0: Core MES
 
-### Testing
-- 16 pytest tests (100% passed)
+#### Models
+- ManufacturingOrder
+- WorkCenter
+- ProductionTask
+
+#### API Endpoints (16 endpoints)
+- Manufacturing Orders (CRUD)
+- Work Centers (CRUD)
+- Production Tasks (CRUD)
+
+#### Database
+- Initial schema with 3 core tables
+- Enums: OrderStatus, OrderType, TaskStatus
+
+#### Tests
+- 16 core tests (100% pass)

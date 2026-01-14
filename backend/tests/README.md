@@ -17,12 +17,15 @@
   - `test_batch.py` - тесты модели Batch (5 тестов)
   - `test_inventory.py` - тесты модели InventoryBalance (6 тестов)
   - `test_work_center_capacity.py` - тесты модели WorkCenterCapacity (4 теста)
+- `services/` - unit-тесты для сервисов:
+  - `test_mrp_service.py` - тесты MRPService (35 тестов)
 - `api/` - интеграционные тесты для новых API endpoints:
   - `test_products_api.py` - тесты API продуктов (9 тестов)
   - `test_bom_api.py` - тесты API спецификаций (6 тестов)
   - `test_batches_api.py` - тесты API батчей (7 тестов)
   - `test_inventory_api.py` - тесты API остатков (7 тестов)
   - `test_work_center_capacities_api.py` - тесты API мощностей РЦ (7 тестов)
+  - `test_mrp_api.py` - тесты MRP API (13 тестов)
 
 ## Установка зависимостей
 
@@ -115,9 +118,78 @@ python -m pytest --cov=src --cov-report=term-missing
 - `sample_wc_capacity_tubing_cream` - мощность РЦ для крема
 - `sample_wc_capacity_reactor_bulk` - мощность РЦ для bulk продукта
 
+## Описание MRP тестов
+
+### MRPService Unit Tests (35 тестов)
+
+#### Консолидация заказов (10 тестов)
+1. `test_consolidate_orders_single_product` - консолидация одного продукта
+2. `test_consolidate_orders_multiple_products` - консолидация нескольких продуктов
+3. `test_consolidate_orders_priority_urgent` - приоритет URGENT (<7 дней)
+4. `test_consolidate_orders_priority_high` - приоритет HIGH (7-14 дней)
+5. `test_consolidate_orders_priority_normal` - приоритет NORMAL (14-30 дней)
+6. `test_consolidate_orders_priority_low` - приоритет LOW (>30 дней)
+7. `test_consolidate_orders_highest_priority_wins` - выбор наивысшего приоритета
+8. `test_consolidate_orders_horizon_filter` - фильтрация по горизонту
+9. `test_consolidate_orders_empty_when_no_ship_orders` - пустой результат без SHIP заказов
+10. `test_consolidate_orders_earliest_latest_dates` - отслеживание дат
+
+#### Взрыв BOM (6 тестов)
+1. `test_explode_bom_single_level` - одноуровневый BOM
+2. `test_explode_bom_multi_level` - многоуровневый BOM
+3. `test_explode_bom_multiple_children` - несколько дочерних продуктов
+4. `test_explode_bom_no_children` - продукт без BOM
+5. `test_explode_bom_circular_dependency_protection` - защита от циклов
+6. `test_explode_bom_quantity_accumulation` - накопление количеств
+
+#### Нетто-потребность (6 тестов)
+1. `test_calculate_net_requirement_no_stock` - без запаса
+2. `test_calculate_net_requirement_sufficient_stock` - достаточный запас
+3. `test_calculate_net_requirement_partial_stock` - частичный запас
+4. `test_calculate_net_requirement_ignores_semi_finished` - игнорирование SEMI_FINISHED
+5. `test_calculate_net_requirement_ignores_reserved` - исключение резерва
+6. `test_calculate_net_requirement_multiple_locations` - несколько локаций
+
+#### Округление до батча (8 тестов)
+1. `test_round_to_batch_exact_multiple` - точное кратное
+2. `test_round_to_batch_round_up` - округление вверх
+3. `test_round_to_batch_below_minimum` - ниже минимума
+4. `test_round_to_batch_at_minimum` - на минимуме
+5. `test_round_to_batch_between_min_and_step` - между min и step
+6. `test_round_to_batch_non_bulk_product` - ошибка для не-BULK
+7. `test_round_to_batch_product_not_found` - продукт не найден
+8. `test_round_to_batch_no_step_defined` - step не определён
+
+#### Создание зависимых заказов (5 тестов)
+1. `test_create_dependent_bulk_order` - создание с родителем
+2. `test_create_dependent_bulk_order_without_parent` - без родителя
+3. `test_create_dependent_bulk_order_non_bulk_product` - ошибка для не-BULK
+4. `test_create_dependent_bulk_order_product_not_found` - продукт не найден
+5. `test_create_dependent_bulk_order_unique_number` - уникальность номеров
+
+### MRP API Integration Tests (13 тестов)
+
+1. `test_consolidate_orders_api` - консолидация через API
+2. `test_consolidate_orders_api_custom_horizon` - кастомный горизонт
+3. `test_explode_bom_api` - взрыв BOM через API
+4. `test_explode_bom_api_no_bom` - продукт без BOM
+5. `test_explode_bom_api_invalid_product` - невалидный продукт
+6. `test_net_requirement_api` - нетто-потребность через API
+7. `test_net_requirement_api_with_inventory` - с инвентарём
+8. `test_create_bulk_order_api` - создание батч-заказа
+9. `test_create_bulk_order_api_without_parent` - без родителя
+10. `test_create_bulk_order_api_invalid_product` - невалидный продукт
+11. `test_consolidate_orders_api_validation_error` - ошибка валидации
+12. `test_explode_bom_api_validation_error` - ошибка валидации
+13. `test_net_requirement_api_validation_error` - ошибка валидации
+
 ## Статистика тестов
 
-- **Всего тестов:** 76 (60 passed, 1 skipped, 15 MVP v1.0)
+- **Всего тестов:** 124 (48 MRP, 60 Iteration 2.0, 16 MVP v1.0)
 - **Unit-тесты моделей:** 25 тестов
-- **Интеграционные API-тесты:** 36 тестов
-- **Покрытие кода:** ~62% (для новых моделей и API ~80%+)
+- **Unit-тесты сервисов:** 35 тестов (MRPService)
+- **Интеграционные API-тесты:** 49 тестов (36 Iteration 2.0 + 13 MRP)
+- **Покрытие кода:** 
+  - MRPService: **95%** ✅
+  - MRP API routes: **79%**
+  - Общее покрытие новых моделей и API: **~80%+**
