@@ -1,72 +1,319 @@
+# MES Domain Model Rules (v2.0)
+
+## Domain Model Overview
+
+The system models **hybrid (process-discrete) manufacturing** for DSIZ (dermatological protection products):
+- **Process part:** bulk cooking (batch process with parameters)
+- **Discrete part:** filling, packaging, labeling (piece-by-piece tracking)
+
 ---
-name: 040-mes-domain
-description: MES domain language and conventions for the SaaS platform
-globs:
-  - "**/*"
-alwaysApply: true
+
+## Core Entities (v2.0)
+
+### Product
+- Universal catalog for raw materials, bulk, packaging, finished goods
+- Types: RAW_MATERIAL, BULK, PACKAGING, FINISHED_GOOD
+- For BULK: min_batch_size_kg, batch_size_step_kg, shelf_life_days
+- Primary key: UUID
+- Unique: product_code (SKU)
+
+### BillOfMaterial (BOM)
+- Multi-level BOM (3 levels: FG → Bulk+Packaging → Raw Materials)
+- Links: parent_product_id → child_product_id
+- Fields: quantity, unit, sequence (nullable, not used in logic)
+- All components are critical (no is_critical flag)
+- Unique constraint: (parent_product_id, child_product_id)
+
+### Batch
+- Production batch for bulk cooking (not piece-by-piece)
+- Statuses: PLANNED, IN_PROGRESS, COMPLETED, FAILED
+- Fields: batch_number (unique), product_id (BULK), quantity_kg, work_center_id, parent_order_id
+- Links to ManufacturingOrder (parent_order_id)
+
+### InventoryBalance
+- Stock tracking (simplified WMS stub)
+- Fields: product_id, location (string: "WAREHOUSE", "CUB_1", "ACCUMULATOR_A"), quantity, product_status
+- ProductStatus: FINISHED (labeled), SEMI_FINISHED (filled but not labeled)
+- Tracks: production_date, expiry_date (for bulk shelf-life), reserved_quantity
+- Unique constraint: (product_id, location, product_status)
+
+### WorkCenterCapacity
+- Stores capacity per product (one WorkCenter → different products → different throughput)
+- Fields: work_center_id, product_id, capacity_per_shift, unit
+- Example: Tubing machine → Cream 100ml: 15000 pcs/shift, Cream 200ml: 9000 pcs/shift
+- Unique constraint: (work_center_id, product_id)
+
+### ManufacturingOrder (extended v2.0)
+- New fields:
+  - order_type: CUSTOMER, INTERNAL_BULK
+  - priority: URGENT (<7 days), HIGH (7-14), NORMAL (14-30), LOW (>30)
+  - parent_order_id: for dependent orders (bulk cooking for filling)
+  - source_order_ids (JSON): list of order UUIDs consolidated into this plan
+  - is_consolidated: consolidation flag
+- New statuses: SHIP (high priority), IN_WORK (low priority for consolidation)
+
+### WorkCenter (extended v2.0)
+- New fields:
+  - batch_capacity_kg: reactor/mixer volume (1000 kg)
+  - cycles_per_shift: number of cycles per shift (2 cooks/shift)
+  - exclusive_products (JSON): product UUIDs that cannot be produced simultaneously
+  - parallel_capacity: number of parallel tasks (4 mixers)
+- Capacity per product → stored in WorkCenterCapacity table (not in WorkCenter)
+
+### ProductionTask (extended v2.0)
+- New fields:
+  - batch_id: if task is linked to bulk cooking (FK → Batch)
+  - quantity_kg: for batch operations
+  - quantity_pcs: for discrete operations
+
 ---
 
-# MES Domain Language
+## Business Logic Rules
 
-Always use **MES-specific terminology** for core concepts:
+### MRP (Material Requirements Planning)
+1. **Order Consolidation:**
+   - Collect all SHIP and IN_WORK orders with due_date < today + horizon_days (default 30)
+   - Calculate priority for SHIP: <7 days → URGENT, 7-14 → HIGH, 14-30 → NORMAL
+   - Group by product_id
+   - Sum SHIP quantities (mandatory)
+   - Check capacity → add IN_WORK if free capacity available
 
-- **ManufacturingOrder** — a production order from ERP, with product, quantity, due date.
-- **WorkCenter** — logical or physical resource that performs operations (machine, station, cell).
-- **ManufacturingRoute** — a sequence of operations required to produce a product.
-- **RouteOperation** — a single operation within a route, tied to a WorkCenter.
-- **ProductionTask** — a scheduled and executable instance of an operation for a specific order.
-- **WIP (Work-in-Process)** — current state of orders and tasks in the shop floor.
-- **GenealogyRecord** — immutable event record capturing who did what, when, and on which task/product.
-- **QualityInspection** — inspection event with measurements and pass/fail outcome.
+2. **BOM Explosion:**
+   - Recursively walk BOM tree
+   - Return requirements: {product_id: quantity}
 
-# Relationships
+3. **Net Requirement:**
+   - Net = Gross Requirement - Available Stock
+   - If Net <= 0 → no production needed
 
-- A `ManufacturingOrder` has one `ManufacturingRoute` (by product) and many `ProductionTasks`.
-- A `ManufacturingRoute` has many `RouteOperations`.
-- A `ProductionTask` refers to exactly one `RouteOperation` and one `WorkCenter`.
-- A `WorkCenter` can have many queued and active `ProductionTasks`.
-- A `ProductionTask` can have many `GenealogyRecord` and `QualityInspection` records.
+4. **Batch Rounding:**
+   - For bulk: round UP to batch_size_step_kg
+   - Min: min_batch_size_kg
+   - Example: need 1200 kg, reactor 1000 kg → plan 2×1000 kg (2000 kg total)
 
-# Behavioral Rules
+5. **Dependent Orders:**
+   - Create INTERNAL_BULK order for bulk cooking
+   - Link to parent order (parent_order_id)
+   - Due date: earlier than filling start (same due date but higher priority for MVP)
 
-- Creating a new `ManufacturingOrder`:
-  - Validate inputs (product, quantity, due date).
-  - Attach an existing `ManufacturingRoute` for the product.
-  - Generate a chain of `ProductionTasks` based on route operations.
-  - Initialize tasks with status `QUEUED`.
-  - Optionally trigger external orchestration (n8n) via webhook.
+### Scheduling Rules
+- Priority-based (not FIFO): URGENT → HIGH → NORMAL → LOW
+- Respect WorkCenter constraints:
+  - exclusive_products: cannot produce simultaneously
+  - parallel_capacity: max parallel tasks
+  - capacity_per_shift: from WorkCenterCapacity table
+- Campaign production: minimize product changeovers (future: Iteration 2.1)
 
-- Dispatching tasks:
-  - Select `QUEUED` tasks in FIFO or according to scheduling rules.
-  - Check capacity and status of the target `WorkCenter`.
-  - Assign tasks and set status to `IN_PROGRESS` when started.
+### Inventory Rules
+- SEMI_FINISHED: after filling, before labeling
+- FINISHED: after labeling (ready to ship)
+- Bulk shelf-life: track production_date + shelf_life_days → expiry_date
+- FEFO (First Expired, First Out): use bulk with nearest expiry_date first (future: Iteration 2.5)
 
-- Completing tasks:
-  - Update status to `COMPLETED` and record timestamps.
-  - Add `GenealogyRecord` for the completion event.
-  - Trigger quality checks where required by the route.
-  - If all tasks of an order are completed and passed quality, mark the `ManufacturingOrder` as `COMPLETED`.
+---
 
-- Genealogy:
-  - `GenealogyRecord` entries are immutable (only inserts, no updates or deletes).
-  - Use them as an audit trail for diagnostics and compliance.
+## Data Model Constraints
 
-# Example Domain Mapping Snippet
+### Primary Keys
+- All tables: UUID (gen_random_uuid())
 
-When you need to map generic entities to MES terms, prefer:
+### Unique Constraints
+- products: product_code
+- batches: batch_number
+- bill_of_materials: (parent_product_id, child_product_id)
+- inventory_balances: (product_id, location, product_status)
+- work_center_capacities: (work_center_id, product_id)
 
-- "process" → `ManufacturingRoute` or `RouteOperation` (depending on granularity).
-- "task" → `ProductionTask`.
-- "executor" / "resource" → `WorkCenter` or operator linked to a work center.
-- "history" / "log" → `GenealogyRecord`.
+### Foreign Keys
+- ON DELETE CASCADE: bill_of_materials, work_center_capacities
+- ON DELETE SET NULL: batches.work_center_id
+- Nullable: batch.parent_order_id, manufacturing_order.parent_order_id
 
-# Documentation Links
+### Indexes
+- products: product_code, product_type
+- bill_of_materials: parent_product_id, child_product_id
+- batches: batch_number, product_id, status, parent_order_id
+- inventory_balances: product_id, location, product_status
+- work_center_capacities: work_center_id, product_id
+- manufacturing_orders: order_type, priority, parent_order_id
 
-When reasoning about domain behavior or generating code / docs, use the following project docs (if present):
+---
 
-- `docs/DOMAIN_MODEL.md` — domain concepts and relationships.
-- `docs/API_SPEC.md` — intended public API for MES operations.
-- `docs/DATABASE_SCHEMA.md` — DB tables and constraints.
-- `docs/ARCHITECTURE.md` — high-level system design.
-- `docs/N8N_WORKFLOW_GUIDE.md` — orchestration logic and webhooks.
-- `docs/POWER_BI_INTEGRATION.md` — analytics and reporting integration.
+## Service Layer
+
+### MRPService (Iteration 2.0)
+Methods:
+- consolidate_orders(horizon_days: int) → List[ConsolidatedOrderPlan]
+- explode_bom(product_id: UUID, quantity: float) → Dict[UUID, float]
+- calculate_net_requirement(product_id: UUID, gross_requirement: float) → float
+- round_to_batch(product_id: UUID, net_requirement_kg: float) → float
+- create_dependent_bulk_order(...) → ManufacturingOrder
+
+### DispatchingService (MVP v1.0, to be updated in Iteration 2.1)
+- Currently FIFO
+- Future: priority-based, capacity-aware, changeover-aware
+
+---
+
+## Enums (Python, not DB)
+
+```python
+# ProductType
+RAW_MATERIAL, BULK, PACKAGING, FINISHED_GOOD
+
+# OrderType
+CUSTOMER, INTERNAL_BULK
+
+# OrderPriority
+URGENT, HIGH, NORMAL, LOW
+
+# OrderStatus (extended)
+PLANNED, RELEASED, IN_PROGRESS, COMPLETED, CANCELLED, SHIP, IN_WORK
+
+# BatchStatus
+PLANNED, IN_PROGRESS, COMPLETED, FAILED
+
+# ProductStatus
+FINISHED, SEMI_FINISHED
+Naming Conventions
+Database Tables
+snake_case: products, bill_of_materials, batches, inventory_balances, work_center_capacities
+
+Model Classes
+PascalCase: Product, BillOfMaterial, Batch, InventoryBalance, WorkCenterCapacity
+
+API Routes
+kebab-case: /products, /bill-of-materials, /batches, /inventory, /work-center-capacities
+
+Prefix: /api/v1/
+
+Variables/Functions
+snake_case: product_id, calculate_net_requirement
+
+Constants
+UPPER_SNAKE_CASE: BATCH_STATUS_COMPLETED
+
+Relationships (SQLAlchemy)
+text
+Product (1) ←─── (N) BillOfMaterial.parent_product_id
+Product (1) ←─── (N) BillOfMaterial.child_product_id
+Product (1) ←─── (N) InventoryBalance.product_id
+Product (1) ←─── (N) Batch.product_id
+Product (1) ←─── (N) WorkCenterCapacity.product_id
+
+ManufacturingOrder (1) ←─── (N) Batch.parent_order_id
+ManufacturingOrder (1) ←─── (N) ManufacturingOrder.parent_order_id (self-referential)
+
+WorkCenter (1) ←─── (N) WorkCenterCapacity.work_center_id
+WorkCenter (1) ←─── (N) Batch.work_center_id
+WorkCenter (1) ←─── (N) ProductionTask.work_center_id
+
+Batch (1) ←─── (N) ProductionTask.batch_id
+Validation Rules
+Product
+product_code: required, unique, max 100 chars
+
+product_type: must be valid enum value
+
+For BULK: min_batch_size_kg <= batch_size_step_kg
+
+shelf_life_days: positive integer or null
+
+BillOfMaterial
+parent_product_id != child_product_id (no self-reference)
+
+quantity > 0
+
+No circular dependencies (validate on insert)
+
+Batch
+batch_number: auto-generated, format "BATCH-YYYY-NNN"
+
+product_id: must reference BULK product type
+
+quantity_kg: must be >= product.min_batch_size_kg
+
+status transitions: PLANNED → IN_PROGRESS → (COMPLETED | FAILED)
+
+InventoryBalance
+quantity >= 0
+
+reserved_quantity >= 0
+
+reserved_quantity <= quantity
+
+expiry_date >= production_date (if both set)
+
+ManufacturingOrder
+If order_type = INTERNAL_BULK: parent_order_id must be set
+
+If is_consolidated = True: source_order_ids must not be empty
+
+priority: auto-calculated from due_date for SHIP orders
+
+Future Iterations (Backlog)
+Iteration 2.1: Scheduling & Capacity
+Changeover rules (ChangeoverRule model)
+
+Product compatibility matrix
+
+Shift-based planning (ShiftCalendar)
+
+Multi-shift constraints
+
+Iteration 2.2: Semi-Finished Goods
+Deferred labeling workflow
+
+Semi-finished inventory tracking
+
+Iteration 2.3: Storage Management
+StorageLocation model (CUB, ACCUMULATOR)
+
+Bulk allocation after cooking
+
+Shelf-life tracking and alerts
+
+Iteration 2.4: Advanced QC
+QCSpecification model
+
+In-Process Control (IPC)
+
+Out-of-Specification (OOS) handling
+
+Iteration 2.5: Lot Traceability
+MaterialLot model
+
+Lot-to-batch linking
+
+FEFO logic
+
+Regulatory reporting
+
+Iteration 2.6: Packaging & Serialization
+PackagingUnit hierarchy
+
+Serial number generation (Data Matrix)
+
+Aggregation (unit → case → pallet)
+
+Iteration 2.7: WMS Integration
+Stock location tracking (zones)
+
+Material reservation
+
+WMS API integration (1C, SAP)
+
+Version History
+v2.0 (2026-01-14):
+
+Added: Product, BillOfMaterial, Batch, InventoryBalance, WorkCenterCapacity
+
+Extended: ManufacturingOrder, WorkCenter, ProductionTask
+
+Added: MRPService foundations
+
+Added: Semi-finished product status
+
+v1.0 (2026-01-13):
+
+Base domain model for discrete manufacturing
