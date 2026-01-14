@@ -61,6 +61,15 @@ from backend.src.schemas.mrp import (
     CreateBulkOrderRequest,
     CreateBulkOrderResponse,
 )
+from backend.src.schemas.dispatching import (
+    ReleaseOrderRequest,
+    ReleaseOrderResponse,
+    DispatchTaskRequest,
+    DispatchTaskResponse,
+    ScheduleResponse,
+    WorkCenterLoadResponse,
+    GanttDataResponse,
+)
 
 __all__ = [
     "ManufacturingOrderBase",
@@ -113,4 +122,11 @@ __all__ = [
     "NetRequirementResponse",
     "CreateBulkOrderRequest",
     "CreateBulkOrderResponse",
+    "ReleaseOrderRequest",
+    "ReleaseOrderResponse",
+    "DispatchTaskRequest",
+    "DispatchTaskResponse",
+    "ScheduleResponse",
+    "WorkCenterLoadResponse",
+    "GanttDataResponse",
 ]
