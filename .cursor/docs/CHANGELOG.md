@@ -1,71 +1,78 @@
-# Changelog
+## [2.1.0] - 2026-01-14
 
-## [2.0.0] - 2026-01-14
+### Added - Dispatching & Scheduling
 
-### Added - Iteration 2.0: Process Manufacturing
+#### DispatchingService (6 methods)
+- **release_order()** — Release order to production (PLANNED → RELEASED)
+  - Creates ProductionTask from route operations
+  - Inherits priority from order
+  - Tasks start in QUEUED status
 
-#### Models (5 new)
-- **Product** — Product catalog (RAW_MATERIAL, BULK, PACKAGING, FINISHED_GOOD)
-- **BillOfMaterial** — Multi-level BOM support
-- **Batch** — Batch production tracking
-- **InventoryBalance** — Inventory tracking (FINISHED/SEMI_FINISHED)
-- **WorkCenterCapacity** — Capacity planning by product
+- **dispatch_task()** — Dispatch task to work center (QUEUED → IN_PROGRESS)
+  - Capacity validation (checks parallel_capacity)
+  - Auto-calculates scheduled_end from estimated_duration
+  - Duration priority: actual > estimated > 8h default
 
-#### API Endpoints (25 new)
-- **Products** (5 endpoints): CRUD + filter by type
-- **BOM** (4 endpoints): CRUD + filter by parent
-- **Batches** (5 endpoints): CRUD + filter by status
-- **Inventory** (4 endpoints): CRUD + adjust (absolute/delta)
-- **WorkCenterCapacity** (3 endpoints): CRUD
-- **MRP** (4 endpoints): consolidate, explode-bom, net-requirement, create-bulk-order
+- **schedule_tasks()** — Get scheduled tasks with priority ordering
+  - Priority: URGENT → HIGH → NORMAL → LOW
+  - Eager loading (no N+1 queries)
+  - Filters: work_center, horizon_days
+
+- **calculate_work_center_load()** — Calculate utilization %
+  - Formula: (Σ IN_PROGRESS hours / (8 × parallel_capacity)) × 100
+  - Only counts IN_PROGRESS tasks
+  - Ignores QUEUED tasks
+
+- **get_gantt_data()** — Export Gantt chart data
+  - Structured timeline for UI visualization
+  - Filters: work_center, date range
+  - Includes order_number for tracking
+
+- **find_available_work_center()** — Find WC with capacity
+  - Checks WorkCenterCapacity for product
+  - Returns WC with load <80%
+  - Returns None if all overloaded
+
+#### API Endpoints (5 new)
+- `POST /api/v1/dispatching/release-order` — Release order
+- `POST /api/v1/dispatching/dispatch-task` — Dispatch task
+- `GET /api/v1/dispatching/schedule` — Get schedule
+- `GET /api/v1/dispatching/work-center-load/{id}` — Get load %
+- `GET /api/v1/dispatching/gantt-data` — Export Gantt data
+
+#### Tests (49 new)
+- **40 unit tests** for DispatchingService (90% coverage)
+- **12 integration tests** for API endpoints (93% coverage)
+- **Total: 141 tests** (93% overall coverage)
 
 #### Database Changes
-- Migration `20260114000001`: 5 new tables
-- Migration `20260114171052`: Add SHIP/IN_WORK to OrderStatus enum
-- Extended ManufacturingOrder with `parent_order_id`, `priority`
-
-#### MRP Service
-- **consolidate_orders()** — Order consolidation with priority calculation
-- **explode_bom()** — Recursive BOM explosion (multi-level)
-- **calculate_net_requirement()** — Net = Gross - Available (FINISHED)
-- **round_to_batch()** — Batch rounding (always round UP)
-- **create_dependent_bulk_order()** — Create INTERNAL_BULK orders
-
-#### Tests
-- **92 total tests** (35 unit + 13 integration + 44 existing)
-- **95% code coverage** for MRPService
-- **100% pass rate** (no regressions)
+- Added `parallel_capacity` to WorkCenter (for multi-line RCs)
+- Task lifecycle: QUEUED → IN_PROGRESS (direct transition)
 
 ### Fixed
-- parent_order_id made optional in CreateBulkOrderRequest
-- SHIP/IN_WORK enum values added to OrderStatus
-- Batch auto-generation (BATCH-YYYYMMDD-HHMMSS-UUID format)
+- Work center load calculation (now uses parallel_capacity)
+- 500 error in `/schedule` endpoint (eager loading)
+- Safe access to task.work_center (None checks)
+- Timezone handling (datetime with tzinfo)
 
-### Business Rules
-- Priority calculation: <7d=URGENT, 7-14d=HIGH, 14-30d=NORMAL, >30d=LOW
-- BOM explosion: recursive with circular dependency protection (max 10 levels)
-- Net requirement: only FINISHED inventory counted, SEMI_FINISHED excluded
-- Batch rounding: always rounds UP, respects min_batch_size_kg and batch_size_step_kg
+### Business Rules Updated
+- **Capacity Formula:**
+Load % = (Σ IN_PROGRESS hours / (8 × parallel_capacity)) × 100
 
----
+- **Load Status Thresholds:**
+- <70% → Available
+- 70-99% → Busy
+- ≥100% → Overloaded
 
-## [1.0.0] - 2026-01-13
+- **Duration Priority:**
+1. Actual: `started_at` / `completed_at`
+2. Estimated: `estimated_duration_minutes` from RouteOperation
+3. Default: 8 hours (one shift)
 
-### Added - MVP v1.0: Core MES
+- **Priority Sequencing:**
+- URGENT → HIGH → NORMAL → LOW
+- Within priority: sorted by `started_at`
 
-#### Models
-- ManufacturingOrder
-- WorkCenter
-- ProductionTask
-
-#### API Endpoints (16 endpoints)
-- Manufacturing Orders (CRUD)
-- Work Centers (CRUD)
-- Production Tasks (CRUD)
-
-#### Database
-- Initial schema with 3 core tables
-- Enums: OrderStatus, OrderType, TaskStatus
-
-#### Tests
-- 16 core tests (100% pass)
+### Documentation
+- Created `/docs/DISPATCHING_GUIDE.md` — Complete dispatching guide
+- Updated README with test coverage stats
