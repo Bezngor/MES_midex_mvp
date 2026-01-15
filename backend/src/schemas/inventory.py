@@ -9,9 +9,10 @@ from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 
 from backend.src.models.enums import ProductStatus
+from backend.src.schemas.product import ProductResponse
 
 
 class InventoryAdjust(BaseModel):
@@ -67,9 +68,15 @@ class InventoryResponse(BaseModel):
     production_date: Optional[datetime] = None
     expiry_date: Optional[datetime] = None
     reserved_quantity: Decimal
+    product: Optional[ProductResponse] = None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field
+    def available_quantity(self) -> Decimal:
+        """Доступное количество (quantity - reserved_quantity)."""
+        return Decimal(str(float(self.quantity or 0) - float(self.reserved_quantity or 0)))
 
 

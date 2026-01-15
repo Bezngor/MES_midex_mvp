@@ -7,7 +7,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, UniqueConstraint
+from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, UniqueConstraint, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, relationship
 
@@ -39,10 +39,12 @@ class InventoryBalance(Base):
         default=0,
     )
     unit: Mapped[str] = Column(String(20), nullable=False)
-    product_status: Mapped[str] = Column(
-        String(50),
+    # Ограничиваем значения статуса перечислением ProductStatus,
+    # чтобы предотвратить появление «мусорных» значений в БД.
+    product_status: Mapped[ProductStatus] = Column(
+        Enum(ProductStatus, name="product_status_enum"),
         nullable=False,
-        default=ProductStatus.FINISHED.value,
+        default=ProductStatus.FINISHED,
         index=True,
     )
 

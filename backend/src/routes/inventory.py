@@ -8,7 +8,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.src.db.session import get_db
 from backend.src.models.inventory_balance import InventoryBalance
@@ -33,7 +33,10 @@ async def list_inventory(
     db: Session = Depends(get_db),
 ) -> dict:
     """Получить список остатков с базовой фильтрацией."""
-    query = db.query(InventoryBalance)
+    query = db.query(InventoryBalance).options(
+        # Жадная загрузка связанного продукта, чтобы фронтенд мог отобразить имя продукта
+        joinedload(InventoryBalance.product)
+    )
     if product_id is not None:
         query = query.filter(InventoryBalance.product_id == product_id)
     if location is not None:

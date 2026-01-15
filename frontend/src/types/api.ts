@@ -16,7 +16,9 @@ export type OrderStatus =
   | "IN_PROGRESS"
   | "COMPLETED"
   | "ON_HOLD"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "SHIP"
+  | "IN_WORK";
 
 export interface ManufacturingOrderRead {
   id: string;
