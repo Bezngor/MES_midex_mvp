@@ -13,7 +13,7 @@ interface ProductFormProps {
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ onSuccess, initialData }) => {
-  const { createProduct, updateProduct } = useProductStore();
+  const { createProduct } = useProductStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

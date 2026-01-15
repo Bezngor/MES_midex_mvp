@@ -2,7 +2,7 @@
  * Компонент дерева спецификации (BOM)
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useBOMStore } from '../../store/useBOMStore';
 import { useProductStore } from '../../store/useProductStore';
 import { Loading } from '../common/Loading';

@@ -7,7 +7,6 @@ import { useBatchStore } from '../../store/useBatchStore';
 import { BatchStatus } from '../../services/types';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
-import { Button } from '../common/Button';
 import { BatchCard } from './BatchCard';
 
 export const BatchList: React.FC = () => {

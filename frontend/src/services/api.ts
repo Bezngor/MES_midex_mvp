@@ -20,7 +20,7 @@ import type {
   MRPExplosion,
   NetRequirement,
 } from './types';
-import type { ApiResponse } from '../types/api';
+import type { ApiResponse, ManufacturingOrderRead, ProductionTaskRead } from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -245,5 +245,43 @@ export const tasksAPI = {
     return api.get(`/production-tasks/${taskId}`);
   },
 };
+
+// =====================
+// Legacy named exports for backward compatibility
+// =====================
+export async function createManufacturingOrder(
+  payload: {
+    product_id: string;
+    quantity: number;
+    order_number: string;
+    due_date: string;
+  }
+): Promise<ApiResponse<ManufacturingOrderRead>> {
+  const result = await ordersAPI.create(payload);
+  // Convert ManufacturingOrder to ManufacturingOrderRead format if needed
+  return result as ApiResponse<ManufacturingOrderRead>;
+}
+
+export async function getManufacturingOrders(params?: {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiResponse<ManufacturingOrderRead[]>> {
+  const result = await ordersAPI.getAll(params);
+  // Convert ManufacturingOrder[] to ManufacturingOrderRead[] format if needed
+  return result as ApiResponse<ManufacturingOrderRead[]>;
+}
+
+export async function getProductionTasks(params?: {
+  status?: string;
+  work_center_id?: string;
+  order_id?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiResponse<ProductionTaskRead[]>> {
+  const result = await tasksAPI.getAll(params);
+  // Convert Task[] to ProductionTaskRead[] format if needed
+  return result as ApiResponse<ProductionTaskRead[]>;
+}
 
 export default api;
