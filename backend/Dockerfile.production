@@ -31,10 +31,10 @@ RUN apt-get update && apt-get install -y \
 # Copy Python dependencies from builder
 COPY --from=builder /root/.local /root/.local
 
-# Copy Alembic configuration
-COPY alembic.ini ./backend/
+# Copy Alembic configuration (в корень /app)
+COPY alembic.ini ./alembic.ini
 
-# Copy application code (maintain backend/src structure)
+# Copy application code (сохраняем структуру backend/src/)
 COPY src/ ./backend/src/
 
 # Set PYTHONPATH to make imports work
