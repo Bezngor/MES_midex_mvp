@@ -56,6 +56,10 @@ services:
       - "traefik.http.routers.mes-frontend.tls=true"
       - "traefik.http.routers.mes-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.services.mes-frontend.loadbalancer.server.port=80"
+      # HTTP router with redirect to HTTPS
+      - "traefik.http.routers.mes-frontend-http.rule=Host(`mes-midex-ru.factoryall.ru`)"
+      - "traefik.http.routers.mes-frontend-http.entrypoints=web"
+      - "traefik.http.routers.mes-frontend-http.middlewares=redirect-to-https@file"
     deploy:
       resources:
         limits:
