@@ -44,7 +44,7 @@ app.add_middleware(
 )
 
 # Mount routers
-app.include_router(health.router, tags=["health"])
+app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(orders.router, tags=["manufacturing-orders"])
 app.include_router(tasks.router, tags=["production-tasks"])
 app.include_router(work_centers.router, tags=["work-centers"])
