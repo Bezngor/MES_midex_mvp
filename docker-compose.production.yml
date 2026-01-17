@@ -49,6 +49,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mes-frontend.rule=Host(`mes-midex-ru.factoryall.ru`)"
+      - "traefik.http.routers.mes-frontend.entrypoints=websecure"
+      - "traefik.http.routers.mes-frontend.tls=true"
+      - "traefik.http.routers.mes-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mes-frontend.loadbalancer.server.port=80"
     deploy:
       resources:
         limits:
