@@ -4,6 +4,7 @@ FastAPI application entry point for MES SaaS platform.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 
 from backend.src.db.session import Base
 from backend.src.routes import (
@@ -27,13 +28,39 @@ from backend.src.routes import (
 # Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="MES SaaS Platform API",
-    description="Manufacturing Execution System API",
-    version="1.0.0",
+    title="MES Platform API",
+    description="Manufacturing Execution System - Production Planning & Scheduling",
+    version="2.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_version="3.1.0",
+    openapi_url="/api/openapi.json",
 )
+
+# Custom OpenAPI schema with version 3.0.3 (Swagger UI compatible)
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    openapi_schema = get_openapi(
+        title="MES Platform API",
+        version="2.1.0",
+        description="Manufacturing Execution System API",
+        routes=app.routes,
+    )
+    
+    # Force OpenAPI 3.0.3 (Swagger UI compatible)
+    openapi_schema["openapi"] = "3.0.3"
+    
+    # Add server URL
+    openapi_schema["servers"] = [
+        {"url": "https://mes-midex-ru.factoryall.ru", "description": "Production server"},
+        {"url": "http://localhost:8000", "description": "Local development"}
+    ]
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 # Configure CORS
 app.add_middleware(
@@ -64,4 +91,4 @@ app.include_router(mrp.router, tags=["MRP"])
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {"message": "MES SaaS Platform API", "version": "1.0.0"}
+    return {"message": "MES Platform API", "version": "2.1.0"}
