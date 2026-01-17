@@ -1,64 +1,132 @@
-saas-mes-platform/
-├── backend/                      # Python (FastAPI) или Node.js (NestJS)
-│   ├── src/
-│   │   ├── models/              # Domainnye entities (PostgreSQL models)
-│   │   │   ├── manufacturing_order.py
-│   │   │   ├── work_center.py
-│   │   │   ├── production_task.py
-│   │   │   ├── genealogy.py
-│   │   │   └── ...
-│   │   ├── routes/              # API endpoints (REST)
-│   │   │   ├── orders.py
-│   │   │   ├── tasks.py
-│   │   │   ├── work_centers.py
-│   │   │   └── ...
-│   │   ├── services/            # Business logic
-│   │   │   ├── scheduling_service.py      # APS logic
-│   │   │   ├── dispatching_service.py     # Task assignment
-│   │   │   ├── quality_service.py         # QC/QA
-│   │   │   └── ...
-│   │   ├── db/
-│   │   │   ├── models.py        # ORM (SQLAlchemy)
-│   │   │   ├── schemas.py       # Pydantic (validation)
-│   │   │   └── migrations/      # Alembic
-│   │   └── main.py
-│   ├── tests/
-│   ├── docker/
-│   └── requirements.txt / package.json
+# MES Platform Project Structure
+
+mes-platform/
+├── backend/ # FastAPI Python backend
+│ ├── src/
+│ │ ├── models/ # SQLAlchemy ORM models
+│ │ │ ├── manufacturing_order.py
+│ │ │ ├── work_center.py
+│ │ │ ├── production_task.py
+│ │ │ ├── product.py # v2.0
+│ │ │ ├── bom.py # v2.0
+│ │ │ ├── batch.py # v2.0
+│ │ │ ├── inventory.py # v2.0
+│ │ │ └── ...
+│ │ ├── routes/ # API endpoints (REST)
+│ │ │ ├── orders.py
+│ │ │ ├── tasks.py
+│ │ │ ├── work_centers.py
+│ │ │ ├── products.py # v2.0
+│ │ │ ├── bom.py # v2.0
+│ │ │ ├── batches.py # v2.0
+│ │ │ ├── mrp.py # v2.0
+│ │ │ └── dispatching.py # v2.1.0
+│ │ ├── services/ # Business logic
+│ │ │ ├── mrp_service.py # v2.0 MRP logic
+│ │ │ ├── dispatching_service.py # v2.1.0 Task dispatch
+│ │ │ └── ...
+│ │ ├── db/
+│ │ │ ├── database.py # DB connection
+│ │ │ ├── schemas.py # Pydantic schemas
+│ │ │ └── models.py # ORM models
+│ │ ├── core/
+│ │ │ ├── config.py # Environment config
+│ │ │ └── security.py # JWT auth
+│ │ └── main.py # FastAPI app
+│ ├── tests/ # Pytest test suite
+│ │ ├── test_mrp_service.py
+│ │ ├── test_dispatching_service.py
+│ │ └── ...
+│ ├── alembic/ # Database migrations
+│ │ └── versions/
+│ ├── Dockerfile # Development Docker image
+│ ├── Dockerfile.production # Production optimized image
+│ ├── alembic.ini
+│ ├── pyproject.toml # Poetry dependencies
+│ └── pytest.ini
 │
-├── frontend/                     # React / Vue
-│   ├── src/
-│   │   ├── components/          # UI components
-│   │   │   ├── TaskDispatcher.jsx
-│   │   │   ├── WIPTracker.jsx
-│   │   │   ├── QualityForm.jsx
-│   │   │   └── ...
-│   │   ├── pages/
-│   │   ├── hooks/               # Custom React hooks
-│   │   ├── services/            # API client (axios)
-│   │   ├── stores/              # State (Zustand / Redux)
-│   │   └── styles/
-│   ├── public/
-│   └── package.json
+├── frontend/ # React + Vite frontend
+│ ├── src/
+│ │ ├── components/ # Reusable UI components
+│ │ │ ├── TaskDispatcher.jsx
+│ │ │ ├── WIPTracker.jsx
+│ │ │ ├── InventoryManager.jsx # v2.0
+│ │ │ ├── MRPPlanner.jsx # v2.0
+│ │ │ └── ...
+│ │ ├── pages/ # Route pages
+│ │ │ ├── OrdersPage.jsx
+│ │ │ ├── ProductsPage.jsx # v2.0
+│ │ │ ├── BatchesPage.jsx # v2.0
+│ │ │ └── ...
+│ │ ├── services/ # API client (axios)
+│ │ │ └── api.js
+│ │ ├── hooks/ # Custom React hooks
+│ │ ├── stores/ # State management
+│ │ └── App.jsx
+│ ├── public/
+│ ├── Dockerfile # Development Docker image
+│ ├── Dockerfile.production # Production nginx image
+│ ├── nginx.conf # Production nginx config
+│ ├── package.json
+│ └── vite.config.js
 │
-├── n8n-workflows/               # Exported workflows as JSON
-│   ├── manufacturing_order_intake.json
-│   ├── task_dispatch.json
-│   ├── alert_handling.json
-│   └── erp_sync.json
+├── .cursor/
+│ └── docs/ # Documentation for Cursor AI
+│ ├── DOMAIN_MODEL.md
+│ ├── API_SPEC.md
+│ ├── ARCHITECTURE.md
+│ ├── DATABASE_SCHEMA.md
+│ ├── MRP_GUIDE.md
+│ ├── DISPATCHING_GUIDE.md
+│ ├── N8N_WORKFLOW_GUIDE.md
+│ ├── TESTING.md
+│ ├── DEPLOYMENT.md # v2.1.0 Production
+│ ├── DOCKER_PRODUCTION.md # v2.1.0 Production
+│ └── CHANGELOG.md
 │
-├── database/
-│   ├── schemas/                 # SQL DDL
-│   ├── migrations/              # Alembic scripts
-│   └── seed/                    # Test data
+├── n8n-workflows/ # n8n automation workflows
+│ ├── manufacturing_order_intake.json
+│ ├── task_dispatch_notification.json
+│ └── ...
 │
-├── docs/
-│   ├── DOMAIN_MODEL.md          # ← Переверстка из Части 1!
-│   ├── API_SPEC.md              # OpenAPI/Swagger
-│   ├── ARCHITECTURE.md
-│   ├── DATABASE_SCHEMA.md
-│   └── n8n_WORKFLOW_GUIDE.md
+├── docs/ # Public documentation
+│ ├── DEPLOYMENT.md # Production deployment guide
+│ ├── DOCKER_PRODUCTION.md # Docker architecture
+│ ├── ARCHITECTURE.md # System architecture
+│ └── ...
 │
-├── .cursorrules                 # ← КРИТИЧНО для Cursor!
-├── docker-compose.yml
+├── .env.example # Environment variables template
+├── .env.staging # Staging environment config
+├── .gitignore
+├── docker-compose.yml # Development environment
+├── docker-compose.production.yml # Production deployment
 └── README.md
+
+
+## Key Directories
+
+### Backend (`backend/`)
+- **src/models**: SQLAlchemy ORM models for database entities
+- **src/routes**: FastAPI API endpoints organized by domain
+- **src/services**: Business logic layer (MRP, Dispatching, etc.)
+- **tests/**: Pytest test suite with 93%+ coverage
+
+### Frontend (`frontend/`)
+- **src/components**: Reusable React components
+- **src/pages**: Page-level components for routing
+- **src/services**: API client for backend communication
+
+### Documentation (`.cursor/docs/`)
+- Cursor AI context files for intelligent code generation
+- Updated with each major feature release
+
+### Production Files (v2.1.0)
+- **Dockerfile.production**: Optimized multi-stage builds
+- **docker-compose.production.yml**: Production orchestration
+- **nginx.conf**: Frontend reverse proxy configuration
+- **.env.example**: Environment variables template
+
+## Changelog
+- **v2.1.0**: Added production deployment files and documentation
+- **v2.0.0**: Added MRP module, Product/BOM/Batch/Inventory models
+- **v1.0.0**: Initial MVP with Manufacturing Orders, Work Centers, Tasks
