@@ -9,7 +9,7 @@ services:
     env_file:
       - backend/.env.production
     ports:
-      - "8000:8000"
+      - "8002:8000"
     volumes:
       - ./config:/app/config:ro  # Mount config directory (read-only)
     networks:
@@ -39,7 +39,7 @@ services:
         - VITE_API_URL=https://mes-midex-ru.factoryall.ru/api/v1
     container_name: mes_frontend
     ports:
-      - "3000:80"
+      - "3002:80"
     networks:
       - dokploy-network
     restart: unless-stopped
