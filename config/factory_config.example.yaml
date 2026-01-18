@@ -1,0 +1,50 @@
+# Factory Configuration Template
+# Copy to factory_config.yaml and customize
+
+factory:
+  name: "Generic Manufacturing Facility"
+  location: "City, Country"
+  timezone: "Europe/Moscow"
+  
+  # Work Calendar
+  shifts:
+    enabled: false
+    config_file: "./config/shifts.yaml"
+  
+  # Production Planning
+  planning:
+    mrp_horizon_days: 30
+    batch_rounding: true
+    default_batch_size_kg: 1000
+    
+  # Inventory Management
+  inventory:
+    stock_buffer_days: 7
+    reorder_point_enabled: false
+    fifo_enabled: true
+    
+  # Work Centers
+  work_centers:
+    default_capacity_units_per_hour: 10
+    parallel_capacity_enabled: true
+    
+  # Quality Control
+  quality:
+    auto_qc_gates: false
+    inspection_required: false
+    
+  # Integrations
+  integrations:
+    n8n_webhook_url: "http://localhost:5678/webhook"
+    erp_api_url: null
+    wms_api_url: null
+
+# Feature Flags
+features:
+  enable_dispatching: true
+  enable_gantt: true
+  enable_mrp: true
+  enable_batch_management: true
+  enable_quality_module: false
+  enable_genealogy: true
+  enable_serialization: false

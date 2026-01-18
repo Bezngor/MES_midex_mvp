@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from backend.src.db.session import Base
-from backend.src.routes import (
+from backend.core.routes import (
     health,
     orders,
     tasks,
@@ -23,18 +23,25 @@ from backend.src.routes import (
     work_center_capacities,
     mrp,
 )
+from backend.config.factory_config import get_factory_config
 
 # Create database tables (for development only, use migrations in production)
 # Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="MES Platform API",
-    description="Manufacturing Execution System - Production Planning & Scheduling",
+    description="Manufacturing Execution System - Template v2.1.0",
     version="2.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
 )
+
+# Load factory configuration on startup
+@app.on_event("startup")
+def load_config():
+    config = get_factory_config()
+    print(f"Loaded factory config: {config.name} ({config.location})")
 
 # Custom OpenAPI schema with version 3.0.3 (Swagger UI compatible)
 def custom_openapi():

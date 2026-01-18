@@ -1,13 +1,50 @@
-# MES Platform v2.1.0 🏭
+# MES Platform Template v2.1.0 🏭
 
-SaaS Manufacturing Execution System (MES) для дискретного и процессного производства.
+> **This is a template repository.** Use it to create custom MES implementations for your factory.
+
+SaaS Manufacturing Execution System (MES) template for discrete and process manufacturing.
+
+## Quick Start
+
+See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for detailed instructions.
+
+### 1. Create Project from Template
+
+Click "Use this template" button above or:
+
+```bash
+gh repo create my-factory-mes --template mes-platform-template
+```
+
+### 2. Configure
+
+```bash
+cp config/factory_config.example.yaml config/factory_config.yaml
+nano config/factory_config.yaml  # Edit settings
+```
+
+### 3. Deploy
+
+```bash
+docker compose -f docker-compose.production.yml up -d --build
+```
+
+***
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2+-blue.svg)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
 
-## 🚀 Features
+## What's Included
+
+- ✅ **60+ API endpoints** — Products, BOM, Batches, Inventory, MRP, Dispatching
+- ✅ **React Dashboard** — 6 pages
+- ✅ **Configuration-driven** — YAML-based customization
+- ✅ **141 unit tests** — 93% coverage
+- ✅ **Production-ready** — Docker + SSL
+
+See [docs/TEMPLATE_GUIDE.md](./docs/TEMPLATE_GUIDE.md) for architecture and customization guide.
 
 ### Manufacturing Core (v1.0)
 - ✅ Manufacturing Orders management

@@ -39,3 +39,11 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Factory-specific configurations
+config/factory_config.yaml
+config/shifts.yaml
+config/rules.yaml
+
+# Keep example files
+!config/*.example.yaml

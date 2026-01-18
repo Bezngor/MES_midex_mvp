@@ -14,8 +14,11 @@ COPY pyproject.toml ./
 # Copy Alembic configuration
 COPY alembic.ini ./backend/
 
-# Copy application code (maintain backend/src structure)
+# Copy application code (src/ for main.py and db/, core/ for refactored code)
 COPY src/ ./backend/src/
+COPY core/ ./backend/core/
+COPY config/ ./backend/config/
+COPY customizations/ ./backend/customizations/
 
 # Set PYTHONPATH to make imports work
 ENV PYTHONPATH=/app
