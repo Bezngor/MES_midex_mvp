@@ -1,4 +1,4 @@
-# Domain Model v2.0 — Process Manufacturing для ДСИЗ
+# Domain Model v2.1 — Process Manufacturing для ДСИЗ
 
 ## Обзор
 
@@ -167,6 +167,41 @@ text
 
 ---
 
+### DispatchingService (Диспетчеризация задач)
+
+**Назначение:** Управление запуском задач, планирование на Work Centers, расчёт загрузки оборудования.
+
+**Методы:**
+
+1. **`release_order(order_id: UUID)`**
+   - Переводит заказ из статуса `PLANNED` → `RELEASED`.
+   - Создаёт `ProductionTask` для каждой операции маршрута.
+   - Задачи получают статус `QUEUED`.
+
+2. **`dispatch_task(task_id: UUID, work_center_id: UUID, scheduled_start: datetime)`**
+   - Назначает задачу на Work Center.
+   - Рассчитывает `scheduled_end` на основе `estimated_duration_minutes`.
+   - Проверяет загрузку оборудования (capacity check).
+   - Переводит задачу в статус `IN_PROGRESS`.
+
+3. **`calculate_work_center_load(work_center_id: UUID, date: date)`**
+   - Рассчитывает загрузку Work Center на заданную дату.
+   - Формула: `Load = (INPROGRESS task hours / (8h * parallel_capacity)) * 100%`
+   - Возвращает статус: `AVAILABLE` (<70%), `BUSY` (70-99%), `OVERLOADED` (≥100%).
+
+4. **`get_schedule(horizon_days: int = 7, work_center_id: Optional[UUID] = None)`**
+   - Возвращает календарный план задач на ближайшие N дней.
+   - Фильтрует по Work Center (опционально).
+   - Включает только задачи в статусе `IN_PROGRESS`.
+
+**Бизнес-правила:**
+- Диспетчеризация только для задач в статусе `QUEUED`.
+- FIFO (First In First Out) — приоритет по дате создания задачи.
+- Capacity check — запрещает назначение задач на перегруженные Work Centers.
+- Parallel capacity — учитывает количество одновременных задач на оборудовании.
+
+---
+
 ## Связи (ER-диаграмма)
 
 Product (1) ←──── (N) BillOfMaterial ────→ (1) Product
@@ -228,6 +263,13 @@ text
 ---
 
 ## Changelog
+
+**v2.1 (2026-01-15):**
+- Добавлен **Dispatching модуль** (order release, task dispatch, scheduling).
+- Добавлено поле `WorkCenter.parallel_capacity` — количество параллельных задач на оборудовании.
+- Добавлено поле `ManufacturingOrder.priority` — приоритет заказа (URGENT/HIGH/NORMAL/LOW).
+- Добавлены поля `ProductionTask.scheduled_start` и `ProductionTask.scheduled_end` для календарного планирования.
+- Расширена логика диспетчеризации задач (FIFO, load balancing, capacity checks).
 
 **v2.0 (2026-01-14):**
 - Добавлены сущности: `Product`, `BillOfMaterial`, `Batch`, `InventoryBalance`, `WorkCenterCapacity`.
