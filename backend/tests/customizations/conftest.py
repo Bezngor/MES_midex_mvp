@@ -2,11 +2,11 @@
 Pytest configuration for customizations tests.
 
 Переопределяет conftest из backend/tests/ для изоляции тестов кастомизаций.
-Тесты кастомизаций не требуют БД и могут работать изолированно.
+Тесты кастомизаций могут требовать БД для тестирования сервисов.
 """
 
 # Этот conftest переопределяет родительский conftest.py из backend/tests/
-# чтобы тесты кастомизаций могли работать без БД-зависимостей
+# но использует его фикстуры для БД
 
 # Игнорируем родительский conftest, если он вызывает проблемы с импортами
 import pytest
@@ -19,4 +19,7 @@ project_root = Path(__file__).parent.parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-# Можно добавить фикстуры для кастомизаций здесь, если понадобится
+# Импортируем фикстуру test_db из родительского conftest
+# Это позволяет использовать БД в тестах кастомизаций
+# Используем pytest_plugins для загрузки фикстур из родительского conftest
+pytest_plugins = ["tests.conftest"]

@@ -173,9 +173,9 @@ class DSIZMRPService(MRPService):
                 bulk_product_sku = bulk_product.product_code
                 
                 # Получаем остатки Bulk со сроком годности >= horizon_days
-                # shelf_life = 30 дней по умолчанию
-                shelf_life_days = int(bulk_product.shelf_life_days or 30)
-                min_expiry_date = datetime.utcnow() + timedelta(days=horizon_days + shelf_life_days)
+                # Продукт должен быть годен на момент использования (в пределах horizon_days)
+                # shelf_life = 30 дней по умолчанию (время хранения после производства)
+                min_expiry_date = datetime.utcnow() + timedelta(days=horizon_days)
                 
                 bulk_inventories = self.db.query(InventoryBalance).filter(
                     InventoryBalance.product_id == bulk_product_id,

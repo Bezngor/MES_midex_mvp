@@ -7,9 +7,7 @@ Unit тесты для DSIZMRPService.
 import pytest
 from datetime import date, datetime, timezone, timedelta
 from uuid import uuid4
-from unittest.mock import patch, mock_open
-import yaml
-from pathlib import Path
+from unittest.mock import patch
 
 from backend.customizations.dsiz.services.dsiz_mrp_service import (
     DSIZMRPService, NetRequirement, BatchOrder
@@ -50,16 +48,19 @@ def test_calculate_net_requirement_with_orders(test_db):
     
     test_db.add_all([fg_product, bulk_product])
     test_db.commit()
+    test_db.flush()
     
     # Создаём BOM: 1 ГП = 0.5 кг Bulk
     bom = BillOfMaterial(
         id=uuid4(),
         parent_product_id=fg_product.id,
         child_product_id=bulk_product.id,
-        quantity=0.5
+        quantity=0.5,
+        unit="кг"
     )
     test_db.add(bom)
     test_db.commit()
+    test_db.flush()
     
     # Создаём заказы ГП
     order = ManufacturingOrder(
@@ -72,6 +73,7 @@ def test_calculate_net_requirement_with_orders(test_db):
     )
     test_db.add(order)
     test_db.commit()
+    test_db.flush()
     
     # Расчёт нетто-потребности
     service = DSIZMRPService(test_db)
@@ -112,7 +114,8 @@ def test_calculate_net_requirement_with_bulk_inventory(test_db):
         id=uuid4(),
         parent_product_id=fg_product.id,
         child_product_id=bulk_product.id,
-        quantity=0.3
+        quantity=0.3,
+        unit="кг"
     )
     test_db.add(bom)
     test_db.commit()
@@ -130,7 +133,8 @@ def test_calculate_net_requirement_with_bulk_inventory(test_db):
     test_db.commit()
     
     # Создаём остаток Bulk (200 кг с достаточным сроком годности)
-    expiry_date = datetime.now(timezone.utc) + timedelta(days=45)  # > 30 дней
+    # expiry_date должен быть >= horizon_days (30 дней) от текущей даты
+    expiry_date = datetime.now(timezone.utc) + timedelta(days=35)  # >= 30 дней (horizon_days)
     inventory = InventoryBalance(
         id=uuid4(),
         product_id=bulk_product.id,
@@ -182,7 +186,8 @@ def test_calculate_net_requirement_with_expired_bulk(test_db):
         id=uuid4(),
         parent_product_id=fg_product.id,
         child_product_id=bulk_product.id,
-        quantity=0.5
+        quantity=0.5,
+        unit="кг"
     )
     test_db.add(bom)
     test_db.commit()
@@ -200,7 +205,8 @@ def test_calculate_net_requirement_with_expired_bulk(test_db):
     test_db.commit()
     
     # Создаём остаток Bulk с недостаточным сроком годности
-    expiry_date = datetime.now(timezone.utc) + timedelta(days=25)  # < 30 дней shelf_life
+    # expiry_date должен быть < horizon_days (30 дней) от текущей даты
+    expiry_date = datetime.now(timezone.utc) + timedelta(days=25)  # < 30 дней (horizon_days)
     inventory = InventoryBalance(
         id=uuid4(),
         product_id=bulk_product.id,
@@ -274,7 +280,8 @@ def test_calculate_net_requirement_sufficient_bulk(test_db):
         id=uuid4(),
         parent_product_id=fg_product.id,
         child_product_id=bulk_product.id,
-        quantity=0.5
+        quantity=0.5,
+        unit="кг"
     )
     test_db.add(bom)
     test_db.commit()
@@ -292,7 +299,8 @@ def test_calculate_net_requirement_sufficient_bulk(test_db):
     test_db.commit()
     
     # Создаём достаточный остаток Bulk (600 кг)
-    expiry_date = datetime.now(timezone.utc) + timedelta(days=50)
+    # expiry_date должен быть >= horizon_days (30 дней) от текущей даты
+    expiry_date = datetime.now(timezone.utc) + timedelta(days=35)  # >= 30 дней (horizon_days)
     inventory = InventoryBalance(
         id=uuid4(),
         product_id=bulk_product.id,
@@ -377,26 +385,19 @@ def test_plan_reactor_batches_underloading(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # Under-loading: 400 кг → 750 кг (min_load)
-    assert len(batches) == 1
-    assert batches[0].bulk_product_sku == "BULK_PASTE"
-    assert batches[0].quantity_kg == 750.0
-    assert batches[0].mode == "PASTE_MODE"
-    assert batches[0].reactor_slot == 1
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Under-loading: 400 кг → 750 кг (min_load)
+        assert len(batches) == 1
+        assert batches[0].bulk_product_sku == "BULK_PASTE"
+        assert batches[0].quantity_kg == 750.0
+        assert batches[0].mode == "PASTE_MODE"
+        assert batches[0].reactor_slot == 1
 
 
 def test_plan_reactor_batches_limit_2_per_shift(test_db):
@@ -447,24 +448,17 @@ def test_plan_reactor_batches_limit_2_per_shift(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # Лимит 2 варки → только первые 2 продукта
-    assert len(batches) == 2
-    assert batches[0].reactor_slot == 1
-    assert batches[1].reactor_slot == 2
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Лимит 2 варки → только первые 2 продукта
+        assert len(batches) == 2
+        assert batches[0].reactor_slot == 1
+        assert batches[1].reactor_slot == 2
 
 
 def test_plan_reactor_batches_cream_mode(test_db):
@@ -499,24 +493,17 @@ def test_plan_reactor_batches_cream_mode(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # Должен быть CREAM_MODE
-    assert len(batches) == 1
-    assert batches[0].mode == "CREAM_MODE"
-    assert batches[0].bulk_product_sku == "BULK_CREAM"
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Должен быть CREAM_MODE
+        assert len(batches) == 1
+        assert batches[0].mode == "CREAM_MODE"
+        assert batches[0].bulk_product_sku == "BULK_CREAM"
 
 
 def test_plan_reactor_batches_paste_mode(test_db):
@@ -551,24 +538,17 @@ def test_plan_reactor_batches_paste_mode(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # Должен быть PASTE_MODE
-    assert len(batches) == 1
-    assert batches[0].mode == "PASTE_MODE"
-    assert batches[0].bulk_product_sku == "BULK_PASTE"
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Должен быть PASTE_MODE
+        assert len(batches) == 1
+        assert batches[0].mode == "PASTE_MODE"
+        assert batches[0].bulk_product_sku == "BULK_PASTE"
 
 
 def test_plan_reactor_batches_batch_rounding(test_db):
@@ -604,23 +584,16 @@ def test_plan_reactor_batches_batch_rounding(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # 1200 кг → округление до 1500 кг (3 * 500)
-    assert len(batches) == 1
-    assert batches[0].quantity_kg == 1500.0
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # 1200 кг → округление до 1500 кг (3 * 500)
+        assert len(batches) == 1
+        assert batches[0].quantity_kg == 1500.0
 
 
 def test_plan_reactor_batches_tuesday_shift1_allowed(test_db):
@@ -650,22 +623,15 @@ def test_plan_reactor_batches_tuesday_shift1_allowed(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-    
-    # Вторник не CIP → варки разрешены
-    assert len(batches) == 1
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Вторник не CIP → варки разрешены
+        assert len(batches) == 1
 
 
 def test_plan_reactor_batches_monday_shift2_allowed(test_db):
@@ -695,22 +661,15 @@ def test_plan_reactor_batches_monday_shift2_allowed(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                batches = service.plan_reactor_batches(mass_demand, monday, shift_num=2)
-    
-    # Понедельник смена 2 не CIP → варки разрешены
-    assert len(batches) == 1
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        batches = service.plan_reactor_batches(mass_demand, monday, shift_num=2)
+        
+        # Понедельник смена 2 не CIP → варки разрешены
+        assert len(batches) == 1
 
 
 # ============================================================================
@@ -747,7 +706,8 @@ def test_full_workflow_net_requirement_to_batches(test_db):
         id=uuid4(),
         parent_product_id=fg_product.id,
         child_product_id=bulk_product.id,
-        quantity=0.5
+        quantity=0.5,
+        unit="кг"
     )
     test_db.add(bom)
     test_db.commit()
@@ -793,31 +753,24 @@ def test_full_workflow_net_requirement_to_batches(test_db):
         }
     }
     
-    original_exists = Path.exists
-    
-    def mock_path_exists(self):
-        path_str = str(self)
-        if "dsiz_config.yaml" in path_str:
-            return True
-        return original_exists(self)
-    
-    with patch('backend.customizations.dsiz.services.dsiz_mrp_service.Path.exists', mock_path_exists):
-        with patch('builtins.open', mock_open(read_data='')):
-            with patch('backend.customizations.dsiz.services.dsiz_mrp_service.yaml.safe_load', return_value=config_data):
-                service = DSIZMRPService(test_db)
-                
-                # 1. Расчёт нетто-потребности
-                net_req = service.calculate_net_requirement("FG_PASTE_200ML", horizon_days=30)
-                
-                # 2. Планирование варок
-                tuesday = date(2026, 1, 27)
-                mass_demand = {net_req.bulk_product_sku: net_req.net_requirement_kg}
-                batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
-                
-                # Проверки
-                assert net_req.net_requirement_kg == 800.0  # 1000 - 200
-                assert len(batches) == 1
-                assert batches[0].quantity_kg == 1000.0  # Округление 800 → 1000 (2 батча)
+    # Мокируем загрузку конфига
+    with patch.object(DSIZMRPService, '_load_dsiz_config') as mock_load_config:
+        mock_load_config.return_value = None
+        service = DSIZMRPService(test_db)
+        service.config = config_data
+        
+        # 1. Расчёт нетто-потребности
+        net_req = service.calculate_net_requirement("FG_PASTE_200ML", horizon_days=30)
+        
+        # 2. Планирование варок
+        tuesday = date(2026, 1, 27)
+        mass_demand = {net_req.bulk_product_sku: net_req.net_requirement_kg}
+        batches = service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+        
+        # Проверки
+        assert net_req.net_requirement_kg == 800.0  # 1000 - 200
+        assert len(batches) == 1
+        assert batches[0].quantity_kg == 1000.0  # Округление 800 → 1000 (2 батча)
 
 
 def test_calculate_net_requirement_invalid_fg_sku(test_db):
