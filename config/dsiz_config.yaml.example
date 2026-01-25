@@ -31,6 +31,29 @@ reactor:
   max_cycles_per_shift: 2
   cip_schedule: "monday_shift_1"
 
+# Work Center Modes (Режимы реактора)
+work_center_modes:
+  WC_REACTOR_MAIN:
+    CREAM_MODE:
+      min_load_kg: 700.0
+      max_load_kg: 1400.0
+      cycle_duration_hours: 4
+      max_cycles_per_shift: 2
+    PASTE_MODE:
+      min_load_kg: 750.0
+      max_load_kg: 1500.0
+      cycle_duration_hours: 5
+      max_cycles_per_shift: 2
+
+# Product Work Center Routing (Маршрутизация продуктов)
+product_routing:
+  # Примеры маршрутизации ГП → рабочие центры
+  # "FG_PASTE_200ML":
+  #   WC_TUBE_LINE_1:
+  #     is_allowed: true
+  #     min_quantity_for_wc: null
+  #     priority_order: 1
+
 # Base Rates (будут использоваться в Phase 2)
 base_rates:
   # Примеры скоростей по продуктам и центрам
