@@ -1,0 +1,38 @@
+# DSIZ Configuration (MVP)
+# Скопируйте в dsiz_config.yaml и настройте под ваше производство
+
+# Workforce Requirements (Нормы укомплектованности)
+workforce:
+  # Реактор: 1 оператор (обязательно)
+  WC_REACTOR_MAIN:
+    OPERATOR:
+      required_count: 1
+      is_mandatory: true
+  
+  # Тубировка: оператор + упаковщик (оба обязательны)
+  WC_TUBE_LINE_1:
+    OPERATOR:
+      required_count: 1
+      is_mandatory: true
+    PACKER:
+      required_count: 1
+      is_mandatory: true
+  
+  # Авто-розлив: 4 оператора (3=0.5 rate)
+  WC_AUTO_LIQUID_SOAP:
+    OPERATOR:
+      required_count: 4
+      is_mandatory: false
+      min_count_for_degraded_mode: 3
+      degradation_factor: 0.5
+
+# Reactor Configuration
+reactor:
+  max_cycles_per_shift: 2
+  cip_schedule: "monday_shift_1"
+
+# Base Rates (будут использоваться в Phase 2)
+base_rates:
+  # Примеры скоростей по продуктам и центрам
+  # product_sku: WC_ID: rate_units_per_hour
+  # "Спрей100мл": "WC_AUTO_LIQUID_SOAP": 5000
