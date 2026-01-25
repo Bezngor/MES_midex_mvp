@@ -235,19 +235,25 @@ class DSIZWorkforceService:
             Словарь с резервом по ролям {"OPERATOR": 1, "PACKER": 0}
         
         Примечание:
-            В MVP упрощённый расчёт: резерв = общий штат - минимальные требования.
+            В MVP упрощённый расчёт: резерв = общий штат - максимальные минимальные требования.
+            Используется максимум минимальных требований по всем центрам (предполагается,
+            что центры могут работать параллельно, но для упрощения берём максимум).
             В Phase 2 будет учёт фактически задействованных центров.
         """
-        # Собираем все минимальные требования по всем центрам
+        # Собираем максимальные минимальные требования по всем центрам
+        # Используем максимум, так как центры могут работать параллельно,
+        # но для упрощения MVP берём максимальное требование одного центра
         min_requirements: Dict[str, int] = {}
         
         for wc_id, requirements in self._requirements_cache.items():
             for role_name, requirement in requirements.items():
-                min_required = requirement.min_count_for_degraded_mode or requirement.required_count
+                # Для расчёта резерва используем required_count (полное требование),
+                # а не min_count_for_degraded_mode (деградированный режим)
+                min_required = requirement.required_count
                 current_min = min_requirements.get(role_name, 0)
                 min_requirements[role_name] = max(current_min, min_required)
         
-        # Резерв = общий штат - минимальные требования
+        # Резерв = общий штат - максимальные минимальные требования
         reserve: Dict[str, int] = {}
         for role_name, total_staff in shift_staff.items():
             min_required = min_requirements.get(role_name, 0)

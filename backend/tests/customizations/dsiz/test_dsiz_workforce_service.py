@@ -5,6 +5,9 @@ Unit тесты для DSIZWorkforceService.
 """
 
 import pytest
+import yaml
+from pathlib import Path
+from unittest.mock import patch, mock_open
 from backend.customizations.dsiz.services.dsiz_workforce_service import DSIZWorkforceService
 
 
@@ -214,3 +217,357 @@ def test_full_workflow():
     reserve = workforce.calculate_reserve(shift_staff)
     assert reserve["OPERATOR"] >= 0
     assert reserve["PACKER"] >= 0
+
+
+# ============================================================================
+# Config Loading Tests (для покрытия загрузки конфига)
+# ============================================================================
+
+def test_config_loading_with_missing_file():
+    """Тест: загрузка требований при отсутствии конфига (используется хардкод)."""
+    # Создаём временный сервис (конфиг не существует)
+    workforce = DSIZWorkforceService()
+    
+    # Должны быть загружены требования по умолчанию
+    assert "WC_REACTOR_MAIN" in workforce._requirements_cache
+    assert "WC_TUBE_LINE_1" in workforce._requirements_cache
+    assert "WC_AUTO_LIQUID_SOAP" in workforce._requirements_cache
+
+
+def test_config_loading_with_empty_workforce_section():
+    """Тест: загрузка при пустой секции workforce в конфиге."""
+    config_data = {'workforce': {}}
+    
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open и yaml.safe_load на уровне модуля сервиса
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                # Сервис должен использовать дефолтные значения
+                workforce = DSIZWorkforceService()
+                assert "WC_REACTOR_MAIN" in workforce._requirements_cache
+                assert workforce.can_run("WC_REACTOR_MAIN", {"OPERATOR": 1})
+
+
+def test_config_loading_from_yaml_file(tmp_path):
+    """Тест: загрузка требований из YAML конфига."""
+    # Создаём временный конфиг с правильной структурой
+    config_data = {
+        'workforce': {
+            'WC_TEST_CENTER': {
+                'OPERATOR': {
+                    'required_count': 2,
+                    'is_mandatory': True
+                }
+            }
+        }
+    }
+    
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open и yaml.safe_load на уровне модуля сервиса
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')) as mock_file:
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                # Создаём новый сервис (он должен загрузить конфиг)
+                workforce = DSIZWorkforceService()
+                
+                # Проверяем, что кастомный центр загружен из конфига
+                assert "WC_TEST_CENTER" in workforce._requirements_cache
+                assert workforce._requirements_cache["WC_TEST_CENTER"]["OPERATOR"].required_count == 2
+
+
+def test_config_loading_with_invalid_yaml(tmp_path):
+    """Тест: обработка ошибки при загрузке невалидного YAML."""
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open и yaml.safe_load для выброса ошибки при парсинге YAML
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='invalid: yaml: content: [')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', side_effect=yaml.YAMLError("Invalid YAML")):
+                # Сервис должен обработать ошибку и использовать дефолтные значения
+                workforce = DSIZWorkforceService()
+                
+                # Проверяем, что дефолтные требования загружены
+                assert "WC_REACTOR_MAIN" in workforce._requirements_cache
+
+
+def test_config_loading_with_partial_workforce_config(tmp_path):
+    """Тест: загрузка конфига с частичной конфигурацией workforce."""
+    config_data = {
+        'workforce': {
+            'WC_CUSTOM_CENTER': {
+                'OPERATOR': {
+                    'required_count': 3,
+                    'is_mandatory': False,
+                    'min_count_for_degraded_mode': 2,
+                    'degradation_factor': 0.7
+                }
+            }
+        }
+    }
+    
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open и yaml.safe_load на уровне модуля сервиса
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')) as mock_file:
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                # Сервис должен загрузить конфиг
+                workforce = DSIZWorkforceService()
+                
+                # Проверяем, что кастомный центр загружен
+                assert "WC_CUSTOM_CENTER" in workforce._requirements_cache
+                req = workforce._requirements_cache["WC_CUSTOM_CENTER"]["OPERATOR"]
+                assert req.required_count == 3
+                assert req.min_count_for_degraded_mode == 2
+                assert req.degradation_factor == 0.7
+
+
+def test_config_loading_with_file_read_error():
+    """Тест: обработка ошибки при чтении файла (не YAML ошибка)."""
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open для выброса IOError
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', side_effect=IOError("Permission denied")):
+            # Сервис должен обработать ошибку и использовать дефолтные значения
+            workforce = DSIZWorkforceService()
+            
+            # Проверяем, что дефолтные требования загружены
+            assert "WC_REACTOR_MAIN" in workforce._requirements_cache
+            assert "WC_TUBE_LINE_1" in workforce._requirements_cache
+            assert "WC_AUTO_LIQUID_SOAP" in workforce._requirements_cache
+
+
+def test_config_loading_with_missing_role_config():
+    """Тест: загрузка конфига с отсутствующими полями в конфигурации роли."""
+    config_data = {
+        'workforce': {
+            'WC_MINIMAL_CENTER': {
+                'OPERATOR': {
+                    'required_count': 2,
+                    # Отсутствуют is_mandatory, min_count_for_degraded_mode, degradation_factor
+                }
+            }
+        }
+    }
+    
+    # Мокируем Path.exists на уровне модуля сервиса
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    # Мокируем open и yaml.safe_load на уровне модуля сервиса
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                # Сервис должен загрузить конфиг с дефолтными значениями для отсутствующих полей
+                workforce = DSIZWorkforceService()
+                
+                # Проверяем, что центр загружен
+                assert "WC_MINIMAL_CENTER" in workforce._requirements_cache
+                req = workforce._requirements_cache["WC_MINIMAL_CENTER"]["OPERATOR"]
+                assert req.required_count == 2
+                assert req.is_mandatory == True  # Дефолтное значение
+                assert req.min_count_for_degraded_mode is None
+                assert req.degradation_factor is None
+
+
+# ============================================================================
+# Edge Cases Tests
+# ============================================================================
+
+def test_can_run_with_mandatory_role_and_degraded_mode():
+    """Тест: обязательная роль с режимом деградации."""
+    # Создаём кастомный центр с обязательной ролью, но с режимом деградации
+    config_data = {
+        'workforce': {
+            'WC_MANDATORY_DEGRADED': {
+                'OPERATOR': {
+                    'required_count': 4,
+                    'is_mandatory': True,
+                    'min_count_for_degraded_mode': 2,
+                    'degradation_factor': 0.5
+                }
+            }
+        }
+    }
+    
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                workforce = DSIZWorkforceService()
+                
+                # С 2 операторами (минимум для деградированного режима) - может работать
+                assert workforce.can_run("WC_MANDATORY_DEGRADED", {"OPERATOR": 2})
+                # С 1 оператором (меньше минимума) - не может работать
+                assert not workforce.can_run("WC_MANDATORY_DEGRADED", {"OPERATOR": 1})
+
+
+def test_can_run_with_non_mandatory_role_below_minimum():
+    """Тест: необязательная роль с минимальным количеством для деградированного режима."""
+    config_data = {
+        'workforce': {
+            'WC_NON_MANDATORY_MIN': {
+                'OPERATOR': {
+                    'required_count': 4,
+                    'is_mandatory': False,
+                    'min_count_for_degraded_mode': 2
+                }
+            }
+        }
+    }
+    
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                workforce = DSIZWorkforceService()
+                
+                # С 2 операторами (минимум) - может работать
+                assert workforce.can_run("WC_NON_MANDATORY_MIN", {"OPERATOR": 2})
+                # С 1 оператором (меньше минимума) - не может работать
+                assert not workforce.can_run("WC_NON_MANDATORY_MIN", {"OPERATOR": 1})
+
+
+def test_get_effective_rate_with_full_staff():
+    """Тест: эффективная скорость при полной укомплектованности."""
+    workforce = DSIZWorkforceService()
+    # Авто-линия с 4 операторами (полная укомплектованность)
+    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 4}, 1000)
+    assert rate == 1000  # Полная скорость
+
+
+def test_get_effective_rate_below_degraded_minimum():
+    """Тест: эффективная скорость при персонале ниже минимума для деградированного режима."""
+    # Создаём кастомный центр с деградацией
+    config_data = {
+        'workforce': {
+            'WC_DEGRADED_TEST': {
+                'OPERATOR': {
+                    'required_count': 4,
+                    'is_mandatory': False,
+                    'min_count_for_degraded_mode': 2,
+                    'degradation_factor': 0.5
+                }
+            }
+        }
+    }
+    
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                workforce = DSIZWorkforceService()
+                
+                # С 1 оператором (меньше минимума для деградированного режима)
+                # Центр не может работать, но если бы мог, деградация не применяется
+                # (так как available_count < min_count_for_degraded_mode)
+                # Но в реальности центр не может работать, поэтому этот случай не должен возникать
+                # Проверяем, что с 2 операторами (минимум) применяется деградация
+                rate = workforce.get_effective_rate("WC_DEGRADED_TEST", {"OPERATOR": 2}, 1000)
+                assert rate == 500  # 1000 * 0.5
+
+
+def test_get_effective_rate_with_multiple_roles_degradation():
+    """Тест: эффективная скорость с несколькими ролями с деградацией (используется минимальный фактор)."""
+    config_data = {
+        'workforce': {
+            'WC_MULTI_ROLE': {
+                'OPERATOR': {
+                    'required_count': 4,
+                    'is_mandatory': False,
+                    'min_count_for_degraded_mode': 3,
+                    'degradation_factor': 0.5
+                },
+                'PACKER': {
+                    'required_count': 2,
+                    'is_mandatory': False,
+                    'min_count_for_degraded_mode': 1,
+                    'degradation_factor': 0.7
+                }
+            }
+        }
+    }
+    
+    original_exists = Path.exists
+    
+    def mock_path_exists(self):
+        path_str = str(self)
+        if "dsiz_config.yaml" in path_str:
+            return True
+        return original_exists(self)
+    
+    with patch('backend.customizations.dsiz.services.dsiz_workforce_service.Path.exists', mock_path_exists):
+        with patch('builtins.open', mock_open(read_data='')):
+            with patch('backend.customizations.dsiz.services.dsiz_workforce_service.yaml.safe_load', return_value=config_data):
+                workforce = DSIZWorkforceService()
+                
+                # OPERATOR: 3/4 (деградация 0.5)
+                # PACKER: 1/2 (деградация 0.7)
+                # Должен использоваться минимальный фактор (0.5)
+                rate = workforce.get_effective_rate("WC_MULTI_ROLE", {"OPERATOR": 3, "PACKER": 1}, 1000)
+                assert rate == 500  # 1000 * 0.5 (минимальный фактор)
