@@ -2,7 +2,7 @@
 
 **Версия:** 2.1.0  
 **Дата:** 20 января 2026  
-**Последнее обновление:** 21 января 2026
+**Последнее обновление:** 21 января 2026 (обновлено)
 
 ---
 
@@ -142,7 +142,13 @@ MES_midex/
 │   │   ├── __init__.py
 │   │   ├── README.md                  # Документация кастомизаций
 │   │   └── dsiz/                      # DSIZ-специфичные кастомизации
-│   │       └── services/
+│   │       ├── routes/                 # DSIZ-специфичные API endpoints
+│   │       │   ├── __init__.py
+│   │       │   └── dsiz_planning_routes.py # Endpoints для планирования DSIZ
+│   │       ├── schemas/                # Pydantic схемы для DSIZ
+│   │       │   ├── __init__.py
+│   │       │   └── planning.py        # Схемы для планирования
+│   │       └── services/               # DSIZ-специфичные сервисы
 │   │           ├── __init__.py
 │   │           ├── dsiz_mrp_service.py      # Кастомный MRP сервис для DSIZ
 │   │           └── dsiz_workforce_service.py # Сервис управления персоналом
@@ -289,11 +295,12 @@ MES_midex/
 
 ### Backend
 - **Модели:** 13 файлов (SQLAlchemy ORM)
-- **Routes:** 15 файлов (API endpoints)
-- **Schemas:** 13 файлов (Pydantic валидация)
-- **Services:** 7 файлов (бизнес-логика)
+- **Routes:** 15 файлов (core) + кастомизации (DSIZ)
+- **Schemas:** 13 файлов (core) + кастомизации (DSIZ)
+- **Services:** 7 файлов (core) + кастомизации (DSIZ)
 - **Тесты:** 141 тест, 93% coverage
 - **Миграции:** 3 версии
+- **Customizations:** DSIZ (routes, schemas, services)
 
 ### Frontend
 - **Компоненты:** 25+ файлов (React + TypeScript)
@@ -353,13 +360,15 @@ MES_midex/
 - `backend/src/` — точка входа приложения
 
 ### Примеры кастомизаций
+- **DSIZ Routes:** `backend/customizations/dsiz/routes/dsiz_planning_routes.py` — API endpoints для планирования DSIZ
+- **DSIZ Schemas:** `backend/customizations/dsiz/schemas/planning.py` — Pydantic схемы для планирования
 - **DSIZ MRP Service:** `backend/customizations/dsiz/services/dsiz_mrp_service.py` — кастомная логика MRP для DSIZ
 - **DSIZ Workforce Service:** `backend/customizations/dsiz/services/dsiz_workforce_service.py` — управление персоналом
 - **DSIZ Config:** `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
 
 ---
 
-**Последнее обновление:** 21 января 2026  
+**Последнее обновление:** 21 января 2026 (обновлено)  
 **Версия:** 2.1.0
 
 ---
@@ -368,6 +377,9 @@ MES_midex/
 
 ### DSIZ Customizations (v2.1.0)
 - Добавлена директория `backend/customizations/dsiz/` для DSIZ-специфичных кастомизаций
-- `dsiz/services/dsiz_mrp_service.py` — кастомный MRP сервис для DSIZ
-- `dsiz/services/dsiz_workforce_service.py` — сервис управления персоналом для DSIZ
-- `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
+- **Routes:** `dsiz/routes/dsiz_planning_routes.py` — API endpoints для планирования
+- **Schemas:** `dsiz/schemas/planning.py` — Pydantic схемы для планирования
+- **Services:** 
+  - `dsiz/services/dsiz_mrp_service.py` — кастомный MRP сервис для DSIZ
+  - `dsiz/services/dsiz_workforce_service.py` — сервис управления персоналом
+- **Config:** `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
