@@ -1,0 +1,167 @@
+1. DSIZ Domain Context
+1.1. Общие сведения
+Дерматологические средства: кремы, пасты, гели, мыло, спреи.
+
+Гибридный процесс: варка (Batch) → фасовка (Discrete).
+
+24/7, 2 смены по 12ч (08:00–20:00, 20:00–08:00).
+
+1.2. Модели времени
+Реактор: фиксированный цикл 4–5ч, макс. 2 варки/смену, CIP по понедельникам shift 1.
+Фасовка: 
+T
+=
+Q
+u
+a
+n
+t
+i
+t
+y
+/
+(
+R
+a
+t
+e
+b
+a
+s
+e
+×
+N
+s
+t
+a
+f
+f
+)
+T=Quantity/(Rate 
+base
+ ×N 
+staff
+ ).
+
+1.3. Work Centers
+Секция 1 (Реактор WC_REACTOR_MAIN): Крем (500–1000кг), Паста (750–1500кг).
+Секция 2 (Тубировка): WC_TUBE_LINE_1/2 (~9000–15000шт/смену).
+Секция 3 (Полуавто): ручной розлив, всегда MANUAL ЧЗ.
+Секция 4 (Авто-розлив): WC_AUTO_LIQUID_SOAP (~5000), WC_AUTO_SPRAY (~7000).
+Секция 5 (Тубы): игнорируется в MVP (закуп).
+
+1.4. Маркировка ЧЗ
+AUTO (принтер): встроено в OP_FILL → сразу ГП.
+MANUAL (по умолчанию): OP_FILL → ПОЛУФАБРИКАТ → OP_LABEL (N или N+1).
+
+1.5. BOM
+Level 0: ГП = Масса + Тара + Упаковка (списание по факту).
+Level 1: Масса (реактор/кубы), Тара (закуп).
+Level 2: Сырьё (химикаты).
+
+1.6. Workforce
+Реактор: 1 оператор (обязательно).
+Тубировка: 2 (оператор+упаковщик, оба обязательно).
+Авто-розлив: 4 оператора (3=0.5 rate).
+
+2. Customization Architecture
+Структура: backend/customizations/dsiz/services/, models/, schemas/, routes/.
+
+DI в main.py:
+
+python
+app.dependency_overrides[MRPService] = DSIZMRPService
+app.dependency_overrides[DispatchingService] = DSIZDispatchingService
+Сервисы:
+
+DSIZMRPService: under-loading, CIP, Bulk-остатки.
+
+DSIZDispatchingService: очередь реактора, changeover, workforce, блокировки, QR.
+
+DSIZLabelingService: AUTO/MANUAL логика.
+
+DSIZWorkforceService: нормы/деградация.
+
+API префикс: /api/v1/dsiz/...
+
+3. Data Model
+Новые таблицы:
+dsiz_work_center_modes — режимы реактора.
+
+dsiz_changeover_matrix — совместимость.
+
+dsiz_base_rates — скорости.
+
+dsiz_workforce_requirements — нормы людей.
+
+dsiz_labeling_rules — правила ЧЗ.
+
+dsiz_qr_availability — QR по production_task_id.
+
+dsiz_product_work_center_routing — ГП→оборудование:
+
+sql
+product_sku | work_center_id | is_allowed | min_quantity | priority
+Спрей100мл  | WC_AUTO        | TRUE       | 5000         | 1
+Паста200мл  | WC_TUBE_LINE_1 | TRUE       | NULL         | 1
+Паста200мл  | WC_SEMI_AUTO   | FALSE      | NULL         | NULL
+Расширения:
+work_centers (+dsiz_* поля), products (+dsiz_compatibility_group), manufacturing_orders (+dsiz_labeling_mode).
+
+MVP: config/dsiz_config.yaml.
+
+4. DSIZ API (/api/v1/dsiz/...)
+Planning:
+
+POST /planning/run — полный цикл (MRP+Dispatching).
+
+GET /planning/plan/{id}.
+
+Admin (admin):
+
+/master-data/work-center-modes, /changeover-matrix, /base-rates, /workforce-rules, /labeling-rules.
+
+Shift (dispatcher/shift_master):
+
+POST /shift/actualize/{date}/{shift} — фактизация смены.
+
+GET/PUT /qr-availability/{task_id}.
+
+Роли: admin, planner, dispatcher, shift_master.
+
+5. Frontend
+Страницы: /dsiz/planning, /dsiz/shift-actualize, /dsiz/master-data.
+
+Компоненты: ReactorSlotSelector, WorkforceInput, ChangeoverMatrixEditor.
+
+Расширения: Gantt (слоты, setup), Resources (DSIZ-вкладки).
+
+shift_master: видит ТОЛЬКО свою смену, мобильная адаптация.
+
+Drag&drop Gantt: Phase 2.
+
+6. Testing (90%+)
+Backend: tests/customizations/dsiz/ — unit (MRP, Dispatching, Workforce), integration API.
+Тестовые данные: все SKU из bom_test.csv (~20 ГП).
+E2E: Playwright (frontend/e2e/dsiz.spec.ts).
+CI/CD: GitHub Actions, cov-fail-under=90.
+
+7. Deployment
+GitOps:
+
+bash
+git commit -m "feat(dsiz): ..."
+git push origin develop
+ssh root@185.177.94.29 "git pull && docker compose up -d --build"
+alembic upgrade head
+Phases:
+
+MVP Core (MRP+Workforce).
+
+Dispatching+Routing.
+
+Admin+Справочники.
+
+Production Validation.
+
+Health: /api/v1/dsiz/health.
