@@ -2,7 +2,7 @@
 
 **Версия:** 2.1.0  
 **Дата:** 20 января 2026  
-**Последнее обновление:** 20 января 2026
+**Последнее обновление:** 21 января 2026
 
 ---
 
@@ -36,7 +36,7 @@ MES_midex/
 │   │       ├── Описание производства (real).txt
 │   │       ├── Специф_группировка.xlsx
 │   │       ├── Специф_плоская.xlsx
-│   │       └── STRUCTURE_PROJECT.md
+│   │       # (файлы без STRUCTURE_PROJECT.md)
 │   ├── docs/                         # Актуальная документация
 │   │   ├── API_SPEC.md
 │   │   ├── ARCHITECTURE.md
@@ -52,6 +52,7 @@ MES_midex/
 │   │   ├── POWER_BI_INTEGRATION.md
 │   │   ├── PRODUCTION_CONNECTIVITY_GUIDE.md
 │   │   ├── REPOSITORY_STRUCTURE.md
+│   │   ├── STRUCTURE_PROJECT.md        # Этот файл
 │   │   ├── TEMPLATE_GUIDE.md
 │   │   ├── TESTING_REPORT.md
 │   │   ├── TESTING_SUMMARY.md
@@ -143,6 +144,7 @@ MES_midex/
 │   │   └── dsiz/                      # DSIZ-специфичные кастомизации
 │   │       └── services/
 │   │           ├── __init__.py
+│   │           ├── dsiz_mrp_service.py      # Кастомный MRP сервис для DSIZ
 │   │           └── dsiz_workforce_service.py # Сервис управления персоналом
 │   │
 │   ├── src/                           # Точка входа приложения
@@ -265,6 +267,7 @@ MES_midex/
 │           └── api.ts                  # Типы API ответов
 │
 ├── config/                             # Конфигурация завода
+│   ├── dsiz_config.yaml.example        # DSIZ-специфичная конфигурация
 │   ├── factory_config.example.yaml    # Пример конфигурации
 │   └── shifts.example.yaml             # Пример графика смен
 │
@@ -309,6 +312,8 @@ MES_midex/
 
 ### Конфигурация
 - `config/factory_config.example.yaml` — настройки завода
+- `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
+- `config/shifts.example.yaml` — пример графика смен
 - `.env.example` — переменные окружения
 - `backend/alembic.ini` — конфигурация миграций
 - `backend/pytest.ini` — конфигурация тестов
@@ -348,11 +353,13 @@ MES_midex/
 - `backend/src/` — точка входа приложения
 
 ### Примеры кастомизаций
-- **DSIZ:** `backend/customizations/dsiz/services/dsiz_workforce_service.py` — управление персоналом
+- **DSIZ MRP Service:** `backend/customizations/dsiz/services/dsiz_mrp_service.py` — кастомная логика MRP для DSIZ
+- **DSIZ Workforce Service:** `backend/customizations/dsiz/services/dsiz_workforce_service.py` — управление персоналом
+- **DSIZ Config:** `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
 
 ---
 
-**Последнее обновление:** 20 января 2026  
+**Последнее обновление:** 21 января 2026  
 **Версия:** 2.1.0
 
 ---
@@ -361,4 +368,6 @@ MES_midex/
 
 ### DSIZ Customizations (v2.1.0)
 - Добавлена директория `backend/customizations/dsiz/` для DSIZ-специфичных кастомизаций
+- `dsiz/services/dsiz_mrp_service.py` — кастомный MRP сервис для DSIZ
 - `dsiz/services/dsiz_workforce_service.py` — сервис управления персоналом для DSIZ
+- `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
