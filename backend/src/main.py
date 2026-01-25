@@ -23,6 +23,7 @@ from backend.core.routes import (
     work_center_capacities,
     mrp,
 )
+from backend.customizations.dsiz.routes import dsiz_planning_router
 from backend.config.factory_config import get_factory_config
 
 # Create database tables (for development only, use migrations in production)
@@ -93,6 +94,7 @@ app.include_router(batches.router, tags=["batches"])
 app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
 app.include_router(mrp.router, tags=["MRP"])
+app.include_router(dsiz_planning_router, prefix="/api/v1", tags=["DSIZ"])
 
 
 @app.get("/")
