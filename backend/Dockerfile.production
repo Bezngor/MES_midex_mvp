@@ -32,13 +32,20 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /root/.local /root/.local
 
 # Copy Alembic configuration (в корень /app)
-COPY alembic.ini ./alembic.ini
+COPY alembic.ini /app/alembic.ini
 
 # Copy application code (src/ for main.py and db/, core/ for refactored code)
 COPY src/ ./backend/src/
 COPY core/ ./backend/core/
 COPY config/ ./backend/config/
 COPY customizations/ ./backend/customizations/
+
+# Fix Alembic paths for Docker (script_location должен быть backend/src/db)
+RUN sed -i 's/script_location = src\/db/script_location = backend\/src\/db/' /app/alembic.ini
+
+# Copy entrypoint script for automatic migrations
+COPY src/db/entrypoint.sh /app/backend/src/db/entrypoint.sh
+RUN chmod +x /app/backend/src/db/entrypoint.sh
 
 # Set PYTHONPATH to make imports work
 ENV PYTHONPATH=/app
@@ -60,6 +67,9 @@ EXPOSE 8000
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Use entrypoint script for automatic migrations
+ENTRYPOINT ["/app/backend/src/db/entrypoint.sh"]
 
 # Run the application with gunicorn
 CMD ["gunicorn", "backend.src.main:app", \
