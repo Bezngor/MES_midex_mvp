@@ -22,7 +22,7 @@ export const MRPDashboard: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">MRP - Консолидация заказов</h2>
+        <h2 className="text-2xl font-bold text-gray-800">MRP - Консолидация заказов</h2>
         <div className="flex gap-2 items-center">
           <label className="text-sm">Горизонт планирования (дней):</label>
           <input
@@ -49,11 +49,11 @@ export const MRPDashboard: React.FC = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border border-gray-300 p-2 text-left">Продукт</th>
-              <th className="border border-gray-300 p-2 text-left">Общее количество</th>
-              <th className="border border-gray-300 p-2 text-left">Приоритет</th>
-              <th className="border border-gray-300 p-2 text-left">Крайний срок</th>
-              <th className="border border-gray-300 p-2 text-left">Источник заказов</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Продукт</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Общее количество</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Приоритет</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Крайний срок</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Источник заказов</th>
             </tr>
           </thead>
           <tbody>
@@ -66,8 +66,8 @@ export const MRPDashboard: React.FC = () => {
             ) : (
               consolidatedOrders.map((order, idx) => (
                 <tr key={idx} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 p-2">{order.product_id}</td>
-                  <td className="border border-gray-300 p-2">{order.total_quantity.toLocaleString('ru-RU')}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{order.product_id}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{order.total_quantity.toLocaleString('ru-RU')}</td>
                   <td className="border border-gray-300 p-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       order.priority === 'URGENT' ? 'bg-red-100 text-red-800' :
@@ -78,10 +78,10 @@ export const MRPDashboard: React.FC = () => {
                       {order.priority}
                     </span>
                   </td>
-                  <td className="border border-gray-300 p-2">
+                  <td className="border border-gray-300 p-2 text-gray-900">
                     {new Date(order.earliest_due_date).toLocaleDateString('ru-RU')}
                   </td>
-                  <td className="border border-gray-300 p-2">
+                  <td className="border border-gray-300 p-2 text-gray-900">
                     <span className="text-sm text-gray-600">
                       {order.source_orders.length} заказ(ов)
                     </span>

@@ -40,7 +40,7 @@ export const InventoryDashboard: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Остатки на складе</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Остатки на складе</h2>
         <select
           className="border rounded px-3 py-2"
           value={filter}
@@ -56,7 +56,7 @@ export const InventoryDashboard: React.FC = () => {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Общее количество</p>
-          <p className="text-2xl font-bold">
+          <p className="text-2xl font-bold text-gray-900">
             {totalQuantity.toLocaleString('ru-RU', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -65,7 +65,7 @@ export const InventoryDashboard: React.FC = () => {
         </div>
         <div className="bg-green-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Доступно</p>
-          <p className="text-2xl font-bold">
+          <p className="text-2xl font-bold text-gray-900">
             {totalAvailable.toLocaleString('ru-RU', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -74,7 +74,7 @@ export const InventoryDashboard: React.FC = () => {
         </div>
         <div className="bg-yellow-50 p-4 rounded-lg">
           <p className="text-sm text-gray-600">Зарезервировано</p>
-          <p className="text-2xl font-bold">
+          <p className="text-2xl font-bold text-gray-900">
             {totalReserved.toLocaleString('ru-RU', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -88,12 +88,12 @@ export const InventoryDashboard: React.FC = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border border-gray-300 p-2 text-left">Продукт</th>
-              <th className="border border-gray-300 p-2 text-left">Локация</th>
-              <th className="border border-gray-300 p-2 text-left">Количество</th>
-              <th className="border border-gray-300 p-2 text-left">Статус</th>
-              <th className="border border-gray-300 p-2 text-left">Доступно</th>
-              <th className="border border-gray-300 p-2 text-left">Зарезервировано</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Продукт</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Локация</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Количество</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Статус</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Доступно</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Зарезервировано</th>
             </tr>
           </thead>
           <tbody>
@@ -116,11 +116,11 @@ export const InventoryDashboard: React.FC = () => {
                 
                 return (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 p-2">
+                    <td className="border border-gray-300 p-2 text-gray-900">
                       {item.product?.product_name || item.product_id}
                     </td>
-                    <td className="border border-gray-300 p-2">{item.location}</td>
-                    <td className="border border-gray-300 p-2">
+                    <td className="border border-gray-300 p-2 text-gray-900">{item.location}</td>
+                    <td className="border border-gray-300 p-2 text-gray-900">
                       {`${quantity.toLocaleString('ru-RU', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -133,13 +133,13 @@ export const InventoryDashboard: React.FC = () => {
                         {item.product_status}
                       </span>
                     </td>
-                    <td className="border border-gray-300 p-2">
+                    <td className="border border-gray-300 p-2 text-gray-900">
                       {`${availableQty.toLocaleString('ru-RU', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })} ${item.unit}`}
                     </td>
-                    <td className="border border-gray-300 p-2">
+                    <td className="border border-gray-300 p-2 text-gray-900">
                       {`${reserved.toLocaleString('ru-RU', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

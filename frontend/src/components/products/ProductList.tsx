@@ -27,7 +27,7 @@ export const ProductList: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Продукты</h2>
+        <h2 className="text-2xl font-bold text-gray-800">Продукты</h2>
         <select
           className="border rounded px-3 py-2"
           value={filter}
@@ -46,11 +46,11 @@ export const ProductList: React.FC = () => {
         <table className="w-full border-collapse border border-gray-300">
           <thead className="bg-gray-100">
             <tr>
-              <th className="border border-gray-300 p-2 text-left">Код</th>
-              <th className="border border-gray-300 p-2 text-left">Название</th>
-              <th className="border border-gray-300 p-2 text-left">Тип</th>
-              <th className="border border-gray-300 p-2 text-left">Ед. изм.</th>
-              <th className="border border-gray-300 p-2 text-left">Действия</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Код</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Название</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Тип</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Ед. изм.</th>
+              <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -63,10 +63,10 @@ export const ProductList: React.FC = () => {
             ) : (
               filteredProducts.map((product) => (
                 <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-300 p-2">{product.product_code}</td>
-                  <td className="border border-gray-300 p-2">{product.product_name}</td>
-                  <td className="border border-gray-300 p-2">{product.product_type}</td>
-                  <td className="border border-gray-300 p-2">{product.unit_of_measure}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{product.product_code}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{product.product_name}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{product.product_type}</td>
+                  <td className="border border-gray-300 p-2 text-gray-900">{product.unit_of_measure}</td>
                   <td className="border border-gray-300 p-2">
                     <Button
                       variant="danger"

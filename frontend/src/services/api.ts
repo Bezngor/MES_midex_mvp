@@ -20,7 +20,15 @@ import type {
   MRPExplosion,
   NetRequirement,
 } from './types';
-import type { ApiResponse, ManufacturingOrderRead, ProductionTaskRead } from '../types/api';
+import type {
+  ApiResponse,
+  ManufacturingOrderRead,
+  ProductionTaskRead,
+  DsizPlanningRequest,
+  DsizPlanningResponse,
+  DispatchRunRequest,
+  DispatchPreviewResponse,
+} from '../types/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -283,5 +291,23 @@ export async function getProductionTasks(params?: {
   // Convert Task[] to ProductionTaskRead[] format if needed
   return result as ApiResponse<ProductionTaskRead[]>;
 }
+
+// =====================
+// DSIZ Planning API
+// =====================
+export const dsizPlanningAPI = {
+  runPlanning: async (request: DsizPlanningRequest): Promise<ApiResponse<DsizPlanningResponse>> => {
+    return api.post('/dsiz/planning/run', request);
+  },
+};
+
+// =====================
+// DSIZ Dispatching API
+// =====================
+export const dsizDispatchingAPI = {
+  runDispatching: async (request: DispatchRunRequest): Promise<ApiResponse<DispatchPreviewResponse>> => {
+    return api.post('/dsiz/dispatching/run', request);
+  },
+};
 
 export default api;

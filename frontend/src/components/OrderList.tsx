@@ -39,6 +39,7 @@ export const OrderList: React.FC = () => {
 
   useEffect(() => {
     loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const formatDate = (dateString: string) => {
@@ -112,22 +113,22 @@ export const OrderList: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Order #
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Product
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Quantity
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Due Date
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-800 uppercase tracking-wider bg-gray-50">
                   Created At
                 </th>
               </tr>
