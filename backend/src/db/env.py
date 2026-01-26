@@ -14,7 +14,8 @@ from alembic import context
 
 # Add the project root directory to the path
 # This allows imports like 'backend.src.db.session'
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+# env.py теперь в src/db/, поэтому путь: ../../.. (3 уровня вверх до корня проекта)
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, project_root)
 
 # ✅ Base из backend.src.db.session (ТОЧНО!)
