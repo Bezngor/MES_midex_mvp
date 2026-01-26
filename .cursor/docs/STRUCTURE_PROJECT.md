@@ -2,7 +2,7 @@
 
 **Версия:** 2.1.0  
 **Дата:** 20 января 2026  
-**Последнее обновление:** 21 января 2026 (обновлено)
+**Последнее обновление:** 26 января 2026
 
 ---
 
@@ -144,12 +144,15 @@ MES_midex/
 │   │   └── dsiz/                      # DSIZ-специфичные кастомизации
 │   │       ├── routes/                 # DSIZ-специфичные API endpoints
 │   │       │   ├── __init__.py
+│   │       │   ├── dsiz_dispatching_routes.py # Endpoints для диспетчеризации DSIZ
 │   │       │   └── dsiz_planning_routes.py # Endpoints для планирования DSIZ
 │   │       ├── schemas/                # Pydantic схемы для DSIZ
 │   │       │   ├── __init__.py
+│   │       │   ├── dispatching.py      # Схемы для диспетчеризации
 │   │       │   └── planning.py        # Схемы для планирования
 │   │       └── services/               # DSIZ-специфичные сервисы
 │   │           ├── __init__.py
+│   │           ├── dsiz_dispatching_service.py # Кастомный диспетчеринг для DSIZ
 │   │           ├── dsiz_mrp_service.py      # Кастомный MRP сервис для DSIZ
 │   │           └── dsiz_workforce_service.py # Сервис управления персоналом
 │   │
@@ -167,7 +170,8 @@ MES_midex/
 │   │       │       ├── .gitkeep
 │   │       │       ├── 20240101000000_initial_schema.py
 │   │       │       ├── 20260114000001_add_process_manufacturing_models.py
-│   │       │       └── 20260114171052_add_ship_in_work_to_orderstatus.py
+│   │       │       ├── 20260114171052_add_ship_in_work_to_orderstatus.py
+│   │       │       └── 20260126000001_feat_dsiz_workcenter_routing_changeover.py # DSIZ: маршрутизация и переналадка
 │   │       └── session.py             # SQLAlchemy session
 │   │
 │   └── tests/                         # Тесты (pytest)
@@ -186,6 +190,16 @@ MES_midex/
 │       │   ├── test_mrp_api.py
 │       │   ├── test_products_api.py
 │       │   └── test_work_center_capacities_api.py
+│       ├── customizations/             # Тесты кастомизаций
+│       │   ├── __init__.py
+│       │   ├── conftest.py             # Фикстуры для кастомизаций
+│       │   └── dsiz/                   # Тесты DSIZ кастомизаций
+│       │       ├── __init__.py
+│       │       ├── test_dsiz_dispatching_routes.py
+│       │       ├── test_dsiz_dispatching_service.py
+│       │       ├── test_dsiz_mrp_service.py
+│       │       ├── test_dsiz_planning_routes.py
+│       │       └── test_dsiz_workforce_service.py
 │       ├── models/                     # Тесты моделей
 │       │   ├── __init__.py
 │       │   ├── test_batch.py
@@ -298,9 +312,9 @@ MES_midex/
 - **Routes:** 15 файлов (core) + кастомизации (DSIZ)
 - **Schemas:** 13 файлов (core) + кастомизации (DSIZ)
 - **Services:** 7 файлов (core) + кастомизации (DSIZ)
-- **Тесты:** 141 тест, 93% coverage
-- **Миграции:** 3 версии
-- **Customizations:** DSIZ (routes, schemas, services)
+- **Тесты:** 141+ тестов, 93% coverage (включая тесты кастомизаций)
+- **Миграции:** 4 версии (включая DSIZ миграции)
+- **Customizations:** DSIZ (routes, schemas, services) с полным покрытием тестами
 
 ### Frontend
 - **Компоненты:** 25+ файлов (React + TypeScript)
@@ -360,15 +374,23 @@ MES_midex/
 - `backend/src/` — точка входа приложения
 
 ### Примеры кастомизаций
-- **DSIZ Routes:** `backend/customizations/dsiz/routes/dsiz_planning_routes.py` — API endpoints для планирования DSIZ
-- **DSIZ Schemas:** `backend/customizations/dsiz/schemas/planning.py` — Pydantic схемы для планирования
-- **DSIZ MRP Service:** `backend/customizations/dsiz/services/dsiz_mrp_service.py` — кастомная логика MRP для DSIZ
-- **DSIZ Workforce Service:** `backend/customizations/dsiz/services/dsiz_workforce_service.py` — управление персоналом
+- **DSIZ Routes:**
+  - `dsiz_dispatching_routes.py` — API endpoints для диспетчеризации DSIZ
+  - `dsiz_planning_routes.py` — API endpoints для планирования DSIZ
+- **DSIZ Schemas:**
+  - `dispatching.py` — Pydantic схемы для диспетчеризации
+  - `planning.py` — Pydantic схемы для планирования
+- **DSIZ Services:**
+  - `dsiz_dispatching_service.py` — кастомная логика диспетчеризации для DSIZ
+  - `dsiz_mrp_service.py` — кастомная логика MRP для DSIZ
+  - `dsiz_workforce_service.py` — управление персоналом
+- **DSIZ Tests:** Полное покрытие тестами в `tests/customizations/dsiz/`
 - **DSIZ Config:** `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация
+- **DSIZ Migrations:** `20260126000001_feat_dsiz_workcenter_routing_changeover.py` — маршрутизация и переналадка
 
 ---
 
-**Последнее обновление:** 21 января 2026 (обновлено)  
+**Последнее обновление:** 26 января 2026  
 **Версия:** 2.1.0
 
 ---
@@ -377,9 +399,16 @@ MES_midex/
 
 ### DSIZ Customizations (v2.1.0)
 - Добавлена директория `backend/customizations/dsiz/` для DSIZ-специфичных кастомизаций
-- **Routes:** `dsiz/routes/dsiz_planning_routes.py` — API endpoints для планирования
-- **Schemas:** `dsiz/schemas/planning.py` — Pydantic схемы для планирования
-- **Services:** 
+- **Routes:**
+  - `dsiz/routes/dsiz_dispatching_routes.py` — API endpoints для диспетчеризации
+  - `dsiz/routes/dsiz_planning_routes.py` — API endpoints для планирования
+- **Schemas:**
+  - `dsiz/schemas/dispatching.py` — Pydantic схемы для диспетчеризации
+  - `dsiz/schemas/planning.py` — Pydantic схемы для планирования
+- **Services:**
+  - `dsiz/services/dsiz_dispatching_service.py` — кастомный диспетчеринг для DSIZ
   - `dsiz/services/dsiz_mrp_service.py` — кастомный MRP сервис для DSIZ
   - `dsiz/services/dsiz_workforce_service.py` — сервис управления персоналом
+- **Tests:** Полное покрытие тестами в `tests/customizations/dsiz/` (5 тестовых файлов)
+- **Migrations:** `20260126000001_feat_dsiz_workcenter_routing_changeover.py` — маршрутизация и переналадка Work Centers
 - **Config:** `config/dsiz_config.yaml.example` — DSIZ-специфичная конфигурация

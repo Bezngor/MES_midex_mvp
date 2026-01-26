@@ -1,12 +1,15 @@
 """
 Alembic environment configuration.
+
+Фикс для production после core рефакторинга:
+- Base импортируется из backend.src.db.session (НЕ из core.models!)
+- Все модели импортируются из backend.core.models для регистрации в Base.metadata
 """
 
 from logging.config import fileConfig
 import os
 import sys
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool, create_engine
 from alembic import context
 
 # Add the project root directory to the path
@@ -14,9 +17,11 @@ from alembic import context
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 sys.path.insert(0, project_root)
 
-# Import Base and models
+# ✅ Base из backend.src.db.session (ТОЧНО!)
 from backend.src.db.session import Base
-from backend.src.models import (
+
+# ✅ Импортируем ВСЕ модели из backend.core.models для регистрации в Base.metadata
+from backend.core.models import (
     ManufacturingOrder,
     WorkCenter,
     ManufacturingRoute,
@@ -24,9 +29,23 @@ from backend.src.models import (
     ProductionTask,
     GenealogyRecord,
     QualityInspection,
+    Product,
+    BillOfMaterial,
+    Batch,
+    InventoryBalance,
+    WorkCenterCapacity,
 )
 
-# Import database URL from environment
+# ✅ Импортируем DSIZ модели для регистрации в Base.metadata
+from backend.customizations.dsiz.models import (
+    DSIZWorkCenterMode,
+    DSIZProductWorkCenterRouting,
+    DSIZChangeoverMatrix,
+    DSIZBaseRates,
+    DSIZWorkforceRequirements,
+)
+
+# Get database URL from environment
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://mes_user:mes_password@localhost:5432/mes_db"
@@ -84,7 +103,10 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
 
+    Использует sqlalchemy.url из config (установлен из DATABASE_URL env).
     """
+    # Используем engine_from_config с URL из config (установлен из DATABASE_URL)
+    # Это стандартный подход Alembic, который правильно обрабатывает подключение
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
