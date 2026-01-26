@@ -8,11 +8,23 @@ from .planning import (
     PlanningOperation,
     PlanningWarning
 )
+from .dispatching import (
+    DispatchRunRequest,
+    DispatchPreviewResponse,
+    WorkCenterLoadResponse,
+    GanttTaskPreview,
+    ConflictInfo,
+)
 
 __all__ = [
     "DsizPlanningRequest",
     "DsizPlanningResponse",
     "ManualBlock",
     "PlanningOperation",
-    "PlanningWarning"
+    "PlanningWarning",
+    "DispatchRunRequest",
+    "DispatchPreviewResponse",
+    "WorkCenterLoadResponse",
+    "GanttTaskPreview",
+    "ConflictInfo",
 ]

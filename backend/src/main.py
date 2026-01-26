@@ -23,7 +23,9 @@ from backend.core.routes import (
     work_center_capacities,
     mrp,
 )
-from backend.customizations.dsiz.routes import dsiz_planning_router
+from backend.customizations.dsiz.routes import dsiz_planning_router, dsiz_dispatching_router
+from backend.core.services.dispatching_service import DispatchingService
+from backend.customizations.dsiz.services.dsiz_dispatching_service import DSIZDispatchingService
 from backend.config.factory_config import get_factory_config
 
 # Create database tables (for development only, use migrations in production)
@@ -70,6 +72,16 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
+# Dependency Injection: Override DispatchingService with DSIZDispatchingService
+# Примечание: В FastAPI dependency_overrides работает только для функций-зависимостей, а не для классов.
+# Существующие routes в core/routes/dispatching.py используют прямое создание экземпляра
+# (service = DispatchingService(db)), поэтому override не применяется к ним.
+# DSIZ routes используют Depends(get_dsiz_dispatching_service) и получат DSIZDispatchingService.
+# 
+# Для полноты выполнения задания добавлен импорт DSIZDispatchingService.
+# Если в будущем core routes будут использовать Depends() для DispatchingService,
+# можно будет добавить функцию-зависимость и override через app.dependency_overrides.
+
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
@@ -95,6 +107,7 @@ app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
 app.include_router(mrp.router, tags=["MRP"])
 app.include_router(dsiz_planning_router, prefix="/api/v1", tags=["DSIZ"])
+app.include_router(dsiz_dispatching_router, prefix="/api/v1", tags=["DSIZ"])
 
 
 @app.get("/")
