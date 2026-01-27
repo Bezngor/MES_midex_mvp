@@ -1,0 +1,81 @@
+# Stage 1: Builder
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency files
+COPY pyproject.toml ./
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --user -e . && \
+    pip install --no-cache-dir --user gunicorn[gevent]
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
+
+# Copy Alembic configuration (в корень /app)
+COPY alembic.ini /app/alembic.ini
+
+# Copy application code (src/ for main.py and db/, core/ for refactored code)
+COPY src/ ./backend/src/
+COPY core/ ./backend/core/
+COPY config/ ./backend/config/
+COPY customizations/ ./backend/customizations/
+
+# Fix Alembic paths for Docker (script_location должен быть backend/src/db)
+RUN sed -i 's/script_location = src\/db/script_location = backend\/src\/db/' /app/alembic.ini
+
+# Copy entrypoint script for automatic migrations
+COPY src/db/entrypoint.sh /app/backend/src/db/entrypoint.sh
+RUN chmod +x /app/backend/src/db/entrypoint.sh
+
+# Set PYTHONPATH to make imports work
+ENV PYTHONPATH=/app
+ENV PATH=/root/.local/bin:$PATH
+
+# Create non-root user for security
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app && \
+    mkdir -p /home/appuser/.local && \
+    cp -r /root/.local/* /home/appuser/.local/ && \
+    chown -R appuser:appuser /home/appuser/.local
+
+USER appuser
+ENV PATH=/home/appuser/.local/bin:$PATH
+
+# Expose port
+EXPOSE 8000
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Use entrypoint script for automatic migrations
+ENTRYPOINT ["/app/backend/src/db/entrypoint.sh"]
+
+# Run the application with gunicorn
+CMD ["gunicorn", "backend.src.main:app", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--timeout", "120", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]

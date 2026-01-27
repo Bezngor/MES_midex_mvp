@@ -1,0 +1,8 @@
+  develop
+* feat/dsiz-phase1-mrp
+  main
+  template-base
+  remotes/origin/develop
+  remotes/origin/feat/dsiz-phase1-mrp
+  remotes/origin/main
+  remotes/origin/template-base

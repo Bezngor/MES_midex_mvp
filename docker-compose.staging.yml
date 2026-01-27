@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:15
+    container_name: mes-db-staging
+    environment:
+      POSTGRES_DB: mes_staging
+      POSTGRES_USER: mes_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-mes_password_staging}
+    volumes:
+      - postgres_data_staging:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Use different port to avoid conflict with main docker-compose
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mes_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.production
+    container_name: mes-backend-staging
+    environment:
+      DATABASE_URL: postgresql://mes_user:${DB_PASSWORD:-mes_password_staging}@db:5432/mes_staging
+      SECRET_KEY: ${SECRET_KEY:-dev_secret_key_change_in_production}
+      ENVIRONMENT: staging
+      CORS_ORIGINS: http://localhost:3000,http://localhost:80,http://localhost
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+      args:
+        VITE_API_URL: http://localhost:8000/api/v1
+    container_name: mes-frontend-staging
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data_staging:

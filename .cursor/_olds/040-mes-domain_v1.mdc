@@ -1,0 +1,72 @@
+---
+name: 040-mes-domain
+description: MES domain language and conventions for the SaaS platform
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# MES Domain Language
+
+Always use **MES-specific terminology** for core concepts:
+
+- **ManufacturingOrder** — a production order from ERP, with product, quantity, due date.
+- **WorkCenter** — logical or physical resource that performs operations (machine, station, cell).
+- **ManufacturingRoute** — a sequence of operations required to produce a product.
+- **RouteOperation** — a single operation within a route, tied to a WorkCenter.
+- **ProductionTask** — a scheduled and executable instance of an operation for a specific order.
+- **WIP (Work-in-Process)** — current state of orders and tasks in the shop floor.
+- **GenealogyRecord** — immutable event record capturing who did what, when, and on which task/product.
+- **QualityInspection** — inspection event with measurements and pass/fail outcome.
+
+# Relationships
+
+- A `ManufacturingOrder` has one `ManufacturingRoute` (by product) and many `ProductionTasks`.
+- A `ManufacturingRoute` has many `RouteOperations`.
+- A `ProductionTask` refers to exactly one `RouteOperation` and one `WorkCenter`.
+- A `WorkCenter` can have many queued and active `ProductionTasks`.
+- A `ProductionTask` can have many `GenealogyRecord` and `QualityInspection` records.
+
+# Behavioral Rules
+
+- Creating a new `ManufacturingOrder`:
+  - Validate inputs (product, quantity, due date).
+  - Attach an existing `ManufacturingRoute` for the product.
+  - Generate a chain of `ProductionTasks` based on route operations.
+  - Initialize tasks with status `QUEUED`.
+  - Optionally trigger external orchestration (n8n) via webhook.
+
+- Dispatching tasks:
+  - Select `QUEUED` tasks in FIFO or according to scheduling rules.
+  - Check capacity and status of the target `WorkCenter`.
+  - Assign tasks and set status to `IN_PROGRESS` when started.
+
+- Completing tasks:
+  - Update status to `COMPLETED` and record timestamps.
+  - Add `GenealogyRecord` for the completion event.
+  - Trigger quality checks where required by the route.
+  - If all tasks of an order are completed and passed quality, mark the `ManufacturingOrder` as `COMPLETED`.
+
+- Genealogy:
+  - `GenealogyRecord` entries are immutable (only inserts, no updates or deletes).
+  - Use them as an audit trail for diagnostics and compliance.
+
+# Example Domain Mapping Snippet
+
+When you need to map generic entities to MES terms, prefer:
+
+- "process" → `ManufacturingRoute` or `RouteOperation` (depending on granularity).
+- "task" → `ProductionTask`.
+- "executor" / "resource" → `WorkCenter` or operator linked to a work center.
+- "history" / "log" → `GenealogyRecord`.
+
+# Documentation Links
+
+When reasoning about domain behavior or generating code / docs, use the following project docs (if present):
+
+- `docs/DOMAIN_MODEL.md` — domain concepts and relationships.
+- `docs/API_SPEC.md` — intended public API for MES operations.
+- `docs/DATABASE_SCHEMA.md` — DB tables and constraints.
+- `docs/ARCHITECTURE.md` — high-level system design.
+- `docs/N8N_WORKFLOW_GUIDE.md` — orchestration logic and webhooks.
+- `docs/POWER_BI_INTEGRATION.md` — analytics and reporting integration.
