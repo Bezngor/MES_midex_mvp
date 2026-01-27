@@ -11,6 +11,9 @@ import { BatchesPage } from './pages/BatchesPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { SchedulePage } from './pages/SchedulePage';
 import { MRPPage } from './pages/MRPPage';
+import { DsizPlanningPage } from './pages/DsizPlanningPage';
+import { DsizShiftActualizePage } from './pages/DsizShiftActualizePage';
+import { DsizMasterDataPage } from './pages/DsizMasterDataPage';
 
 const Navigation: React.FC = () => {
   const location = useLocation();
@@ -23,6 +26,9 @@ const Navigation: React.FC = () => {
     { path: '/inventory', label: 'Остатки' },
     { path: '/schedule', label: 'Расписание' },
     { path: '/mrp', label: 'MRP' },
+    { path: '/dsiz/planning', label: 'DSIZ Planning' },
+    { path: '/dsiz/shift-actualize', label: 'DSIZ Shift Actualize' },
+    { path: '/dsiz/master-data', label: 'DSIZ Master Data' },
   ];
 
   return (
@@ -61,6 +67,9 @@ function App() {
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/mrp" element={<MRPPage />} />
+          <Route path="/dsiz/planning" element={<DsizPlanningPage />} />
+          <Route path="/dsiz/shift-actualize" element={<DsizShiftActualizePage />} />
+          <Route path="/dsiz/master-data" element={<DsizMasterDataPage />} />
         </Routes>
       </div>
     </BrowserRouter>

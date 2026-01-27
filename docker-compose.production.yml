@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.production
     container_name: mes_backend
     env_file:
-      - backend/.env.production
+      - .env.production
     ports:
       - "8002:8000"
     volumes:

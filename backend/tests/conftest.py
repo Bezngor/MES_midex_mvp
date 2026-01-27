@@ -13,16 +13,16 @@ from datetime import datetime, timezone
 
 from backend.src.main import app
 from backend.src.db.session import Base, get_db
-from backend.src.models.work_center import WorkCenter
-from backend.src.models.manufacturing_route import ManufacturingRoute
-from backend.src.models.route_operation import RouteOperation
-from backend.src.models.product import Product
-from backend.src.models.bill_of_material import BillOfMaterial
-from backend.src.models.batch import Batch
-from backend.src.models.inventory_balance import InventoryBalance
-from backend.src.models.work_center_capacity import WorkCenterCapacity
-from backend.src.models.manufacturing_order import ManufacturingOrder
-from backend.src.models.enums import (
+from backend.core.models.work_center import WorkCenter
+from backend.core.models.manufacturing_route import ManufacturingRoute
+from backend.core.models.route_operation import RouteOperation
+from backend.core.models.product import Product
+from backend.core.models.bill_of_material import BillOfMaterial
+from backend.core.models.batch import Batch
+from backend.core.models.inventory_balance import InventoryBalance
+from backend.core.models.work_center_capacity import WorkCenterCapacity
+from backend.core.models.manufacturing_order import ManufacturingOrder
+from backend.core.models.enums import (
     WorkCenterStatus, ProductType, BatchStatus, ProductStatus, OrderStatus, OrderType, OrderPriority
 )
 

@@ -60,3 +60,82 @@ export interface ProductionTaskRead {
   created_at: string;
   updated_at: string;
 }
+
+/**
+ * DSIZ Planning types
+ */
+export interface ManualBlock {
+  work_center_id: string;
+  shift_date: string;
+  shift_num: 1 | 2;
+  reason?: string;
+}
+
+export interface DsizPlanningRequest {
+  planning_date: string;
+  horizon_days?: number;
+  manual_blocks?: ManualBlock[];
+  workforce_state?: Record<string, Record<string, number>>;
+}
+
+export interface PlanningOperation {
+  bulk_product_sku: string;
+  quantity_kg: number;
+  mode: string;
+  shift_date: string;
+  shift_num: 1 | 2;
+  reactor_slot: 1 | 2;
+}
+
+export interface PlanningWarning {
+  level: 'WARNING' | 'ERROR';
+  message: string;
+  context?: Record<string, any>;
+}
+
+export interface DsizPlanningResponse {
+  success: boolean;
+  plan_id: string;
+  planning_date: string;
+  horizon_days: number;
+  operations: PlanningOperation[];
+  warnings: PlanningWarning[];
+  summary: Record<string, any>;
+}
+
+/**
+ * DSIZ Dispatching types
+ */
+export interface DispatchRunRequest {
+  manufacturing_order_ids: string[];
+  work_center_id?: string;
+}
+
+export interface GanttTaskPreview {
+  task_id: string;
+  order_id: string;
+  work_center_id: string;
+  work_center_name: string;
+  task_start: string;
+  task_end: string;
+  duration_hours: number;
+  changeover_minutes: number;
+  status: string;
+  priority: string;
+}
+
+export interface ConflictInfo {
+  task_id: string;
+  conflict_with: string;
+  work_center_id: string;
+  overlap_start: string;
+  overlap_end: string;
+}
+
+export interface DispatchPreviewResponse {
+  success: boolean;
+  data: {
+    gantt_preview: GanttTaskPreview[];
+    conflicts: ConflictInfo[];
+  };
+}

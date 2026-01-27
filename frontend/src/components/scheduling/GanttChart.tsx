@@ -62,7 +62,7 @@ export const GanttChart: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">Расписание производства (Gantt)</h3>
+        <h3 className="text-xl font-bold text-gray-800">Расписание производства (Gantt)</h3>
         <select
           className="border rounded px-3 py-2"
           value={days}
@@ -77,11 +77,11 @@ export const GanttChart: React.FC = () => {
       <div className="overflow-x-auto">
         <div className="min-w-full">
           {/* Заголовок с датами */}
-          <div className="flex border-b mb-2">
-            <div className="w-48 flex-shrink-0 p-2 font-semibold">Рабочий центр</div>
+          <div className="flex border-b mb-2 bg-gray-50">
+            <div className="w-48 flex-shrink-0 p-2 font-semibold text-gray-800">Рабочий центр</div>
             <div className="flex-1 grid grid-cols-7 gap-1">
               {dates.map((date, idx) => (
-                <div key={idx} className="text-xs text-center p-1 border-r">
+                <div key={idx} className="text-xs text-center p-1 border-r text-gray-800 font-medium">
                   {date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
                 </div>
               ))}
@@ -91,7 +91,7 @@ export const GanttChart: React.FC = () => {
           {/* Рабочие центры и задачи */}
           {ganttData.work_centers.map((wc) => (
             <div key={wc.id} className="mb-4 border-b pb-4">
-              <div className="font-semibold mb-2">{wc.name}</div>
+              <div className="font-semibold mb-2 text-gray-800">{wc.name}</div>
               <div className="relative h-20 bg-gray-50 rounded">
                 {wc.tasks.map((task) => {
                   const position = getTaskPosition(task.start, task.end);

@@ -28,7 +28,7 @@ export const BOMTree: React.FC<BOMTreeProps> = ({ productId }) => {
 
   return (
     <div className="p-4">
-      <h3 className="text-xl font-bold mb-4">Спецификация (BOM)</h3>
+      <h3 className="text-xl font-bold mb-4 text-gray-800">Спецификация (BOM)</h3>
       {bomItems.length === 0 ? (
         <p className="text-gray-500">Спецификация пуста</p>
       ) : (

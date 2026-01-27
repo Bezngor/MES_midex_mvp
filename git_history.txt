@@ -1,0 +1,30 @@
+* c538958 (HEAD -> feat/dsiz-phase1-mrp, origin/feat/dsiz-phase1-mrp) fix(dsiz-tests): TS RTL types + jest-dom (build green)
+* 2fc3a03 feat: dsiz frontend mvp phase 3
+* 3d787c8 feat(deploy): deployment.sh + entrypoint.sh + env.production + docker fixes [DSIZ_DEPLOYMENT_LESSONS.md]
+* 1e7a1ea fix(dsiz-db): alembic structure + env.py + dsiz tests [STRUCTURE_PROJECT.md]
+* 3712c8d feat(dsiz-db): DSIZ models + alembic autogenerate migration + seed data [STRUCTURE_PROJECT.md]
+* 3bbb3f2 feat: enhance dsiz-phase2 with improved dispatching logic and route management
+* ea24e92 feat: dsiz-phase2 di + dispatching routes
+* 66ef05d feat: dsiz-phase2 dsiz_dispatching_service.py
+* cc484c7 docs: Phase 1 complete - DSIZ core services + API
+* c5e6a1d feat(dsiz-phase1): complete MVP core - MRP + Workforce + Planning API (59 tests, 96% cov)
+* 895c3cf docs: update structure after DSIZMRPService
+* 8932d68 feat(dsiz-phase1): add DSIZMRPService + 20+ tests (BOM explosion, reactor batches)
+* 0b6f4d9 feat(dsiz-phase1): add comprehensive DSIZ customization documentation and resources
+* b95518a docs: add comprehensive project structure documentation for MES Platform v2.1.0
+* 14efdd8 feat(dsiz-phase1): add DSIZWorkforceService + 36 tests (100% cov)
+* 8dfab90 feat(dsiz-phase1): add DSIZWorkforceService
+* f08fd2b (tag: v2.1.0-template, origin/template-base, origin/develop, template-base, develop) feat: add .template-config.yaml with template metadata and metrics
+* 322c4c3 docs: add template usage section to README with quick start and links
+* 4414b8f docs: add CUSTOMIZATION_GUIDE.md with DI patterns and examples
+* fa73ce8 docs: add TEMPLATE_GUIDE.md for MES Platform v2.1 template usage
+* b439dc1 docs: update API specification and domain model for v2.1
+* 0ca3f9a docs: add deployment sequence guide with lessons learned
+* 2e476c6 fix: change ports to 8002/3002 to avoid conflicts
+* ab88d05 fix: change ports to 8002 and 3002 to avoid conflicts
+* f02d08a fix: use backend/.env.production for docker-compose
+* c39d3c4 feat: Refactor project structure and enhance configuration management
+* f0f7881 fix: nginx DNS caching with Docker resolver
+* 58184be fix: downgrade OpenAPI to 3.0.3 for Swagger UI
+* 3883619 fix: Add explicit openapi_version to fix Swagger UI rendering
+* 83eb70b feat: Add HTTP to HTTPS redirect for mes-frontend
