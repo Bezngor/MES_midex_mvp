@@ -195,6 +195,71 @@ ssh root@155.212.184.11 "cd /opt/mes-platform && git pull && docker compose rest
 - .env.example обновлён (если добавлены переменные)
 - Alembic миграции созданы (если изменена БД)
 
+---
+
+## ✅ Pre-Commit Checklist (обязательно!)
+
+Перед **ЛЮБЫМ** `git push` проверь:
+
+### Разработка
+- [ ] Работаю в **feature-ветке** (`feat/*`, `fix/*`), НЕ в `develop` или `main`
+- [ ] Коммиты следуют **Conventional Commits** (`feat:`, `fix:`, `docs:`, etc.)
+- [ ] Тесты **зелёные** (`pytest tests/` без ошибок)
+- [ ] Coverage ≥ 90% для новых модулей
+- [ ] Нет hardcoded credentials (`.env` в `.gitignore`)
+
+### Feature завершена
+- [ ] Создал **Pull Request** на GitHub: `feat/* → develop`
+- [ ] Code review пройден (если есть команда)
+- [ ] CI/CD зелёный (если настроен)
+- [ ] **После merge** — удалил feature-ветку локально и на GitHub
+
+### Релиз на production
+- [ ] Создана **release-ветка** от `develop`: `release/v1.x.0-dsiz`
+- [ ] Version bump выполнен (`backend/__init__.py`, `frontend/package.json`)
+- [ ] CHANGELOG обновлён
+- [ ] Pull Request: `release/* → main` (НЕ прямой merge!)
+- [ ] **После merge в main** — создан **production tag** `v1.x.0-dsiz`
+- [ ] Tag запушен: `git push origin v1.x.0-dsiz`
+- [ ] Release-ветка смержена обратно в `develop`
+
+### Деплой на VPS
+- [ ] На VPS используется **ТОЛЬКО** ветка `main` (НЕ `feat/*` или `develop`)
+- [ ] Деплой через `git pull origin main` (НЕ через `git checkout feat/*`)
+- [ ] После pull — выполнен `docker compose restart`
+- [ ] Health check пройден: `curl https://mes-midex-ru.factoryall.ru/api/v1/health`
+- [ ] Логи проверены: `docker logs mes_backend --tail 50` (нет ERROR)
+
+---
+
+## 🚫 Запрещённые действия (НИКОГДА!)
+
+| ❌ Нельзя | Почему | ✅ Правильно |
+|-----------|--------|-------------|
+| `git commit` прямо в `main` | Нарушает GitOps, нет code review | Создать `hotfix/*` → PR → merge |
+| `git commit` прямо в `develop` | Нет изоляции фич, откат невозможен | Создать `feat/*` → PR → merge |
+| `git push --force` в `main`/`develop` | Уничтожает историю команды | Использовать `git revert` или `hotfix/*` |
+| Деплой из `feat/*` на production | Production должен быть из `main` | Merge `feat/*` → `develop` → `release/*` → `main` |
+| Изменять файлы напрямую на VPS | Нет в Git, потеряется при pull | Изменить локально → commit → push → pull на VPS |
+| Изменять `backend/core/` в factory-проекте | Core — универсальный шаблон | Использовать `backend/customizations/` + DI |
+| Коммитить `.env`, `factory_config.yaml` | Содержат credentials | Добавить в `.gitignore`, использовать `.example` |
+
+---
+
+## 📞 Эскалация критичных изменений
+
+Требуют согласования команды/архитектора:
+
+- Изменения в `backend/core/` (универсальное ядро)
+- Изменения в `template-base` ветке
+- Database schema breaking changes (удаление колонок/таблиц)
+- Force-push в protected ветки (`main`, `develop`)
+- Изменение API контрактов (breaking changes)
+
+**Процесс:** GitHub Issue → label `critical-review` → обсуждение → approval
+
+---
+
 🎯 **Примеры**
 Пример 1: Добавление DSIZ модуля (Phase 4)
 ```bash
