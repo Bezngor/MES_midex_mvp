@@ -8,7 +8,7 @@
 **ВСЕ изменения → Git** (никаких правок на сервере!):
 git add . && git commit -m "feat/fix: описание"
 git push origin develop/feat/xxx
-ssh root@185.177.94.29 "cd /opt/mes-platform && ./deployment.sh feat/xxx"
+ssh root@155.212.184.11 "cd /opt/mes-platform && ./deployment.sh feat/xxx"
 
 text
 
