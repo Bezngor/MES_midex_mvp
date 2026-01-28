@@ -1,0 +1,23 @@
+  backup-develop-2026-01-27
+  backup-main-2026-01-27
+* develop
+  feat/dsiz-phase1-mrp
+  main
+  template-base
+18e0e3c docs: merge PROJECT_MANIFEST from main
+On branch develop
+Your branch is up to date with 'origin/develop'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   backend/Dockerfile.production
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	.cursor/CONTEXT_STACK.md
+	.cursor/MASTER_PROMPT.md
+	.cursor/_olds/MES_RULES_v1.md
+	localhost_git_status.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
