@@ -18,15 +18,13 @@
 --   WC_TUBE_LINE_1 - Линия тубировки 1
 --   WC_AUTO_LIQUID_SOAP - Автоматическая линия розлива жидкого мыла
 
--- Пример создания рабочих центров (раскомментируйте при необходимости):
-/*
+-- Создание рабочих центров DSIZ (если ещё нет — ON CONFLICT DO NOTHING)
 INSERT INTO work_centers (id, name, resource_type, status, capacity_units_per_hour, batch_capacity_kg, cycles_per_shift, parallel_capacity, created_at, updated_at)
 VALUES
     ('00000000-0000-0000-0000-000000000001'::uuid, 'WC_REACTOR_MAIN', 'MACHINE', 'AVAILABLE', 100.0, 2000.0, 2, 1, NOW(), NOW()),
     ('00000000-0000-0000-0000-000000000002'::uuid, 'WC_TUBE_LINE_1', 'MACHINE', 'AVAILABLE', 150.0, NULL, NULL, 1, NOW(), NOW()),
     ('00000000-0000-0000-0000-000000000003'::uuid, 'WC_AUTO_LIQUID_SOAP', 'MACHINE', 'AVAILABLE', 200.0, NULL, NULL, 4, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
-*/
 
 -- ============================================================================
 -- 2. Создание продуктов из bom_test.csv (примеры)
@@ -34,8 +32,7 @@ ON CONFLICT (id) DO NOTHING;
 -- Примечание: Используйте существующие продукты или создайте новые
 -- SKU из CSV: 00-00000952, БП-00000087, 00-00000128, 00-00000129, БП-00000096, и т.д.
 
--- Пример создания продуктов (раскомментируйте при необходимости):
-/*
+-- Создание продуктов DSIZ (если ещё нет — ON CONFLICT DO NOTHING)
 INSERT INTO products (id, product_code, product_name, product_type, unit_of_measure, created_at, updated_at)
 VALUES
     ('10000000-0000-0000-0000-000000000001'::uuid, '00-00000952', 'СЕВЕРЯНИН Паста для очистки с натур. абразивом, 200 мл, Экст, ФТ', 'FINISHED_GOOD', 'шт', NOW(), NOW()),
@@ -47,7 +44,6 @@ VALUES
     ('10000000-0000-0000-0000-000000000007'::uuid, '00-00000023', 'GECO Мыло жидкое, 1 л, Флакон, Дозатор', 'FINISHED_GOOD', 'шт', NOW(), NOW()),
     ('10000000-0000-0000-0000-000000000008'::uuid, 'БП-00000111', 'GECO Мыло жидкое, 250 мл, Флакон, Дозатор', 'FINISHED_GOOD', 'шт', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
-*/
 
 -- ============================================================================
 -- 3. dsiz_work_center_modes - Режимы реактора

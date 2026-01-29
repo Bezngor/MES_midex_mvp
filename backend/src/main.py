@@ -102,6 +102,8 @@ app.include_router(manufacturing_routes.router, tags=["manufacturing-routes"])
 app.include_router(operations.router, tags=["route-operations"])
 app.include_router(products.router, tags=["products"])
 app.include_router(bom.router, tags=["bill-of-materials"])
+# Роутер действий батчей (start/complete) — первым, чтобы /batches/start/{id} и /complete/{id} всегда находились
+app.include_router(batches.router_actions, tags=["batches"])
 app.include_router(batches.router, tags=["batches"])
 app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])

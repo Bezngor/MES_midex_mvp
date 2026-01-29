@@ -37,7 +37,7 @@ export const BatchCard: React.FC<BatchCardProps> = ({ batch }) => {
       <div className="flex justify-between items-start mb-2">
         <div>
           <h3 className="font-semibold text-lg">{batch.batch_number}</h3>
-          <p className="text-sm text-gray-600">{product?.product_name || batch.product_id}</p>
+          <p className="text-sm text-gray-600">{batch.product_name ?? product?.product_name ?? batch.product_id}</p>
         </div>
         <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(batch.status)}`}>
           {batch.status}

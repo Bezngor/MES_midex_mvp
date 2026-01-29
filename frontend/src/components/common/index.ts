@@ -6,3 +6,4 @@ export { Loading } from './Loading';
 export { Error } from './Error';
 export { Button } from './Button';
 export { Modal } from './Modal';
+export { ConfirmDialog } from './ConfirmDialog';

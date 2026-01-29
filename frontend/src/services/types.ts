@@ -86,6 +86,8 @@ export interface Batch {
   id: string;
   batch_number: string;
   product_id: string;
+  /** Наименование продукта (из API, для отображения в UI вместо UUID). */
+  product_name?: string | null;
   quantity_kg: number;
   status: BatchStatus;
   work_center_id?: string;

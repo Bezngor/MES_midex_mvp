@@ -116,11 +116,11 @@ class ConfigLoader:
             factory_data['features'] = data.get('features', {})
             
             self._config = FactoryConfig(**factory_data)
-            print(f"✅ Loaded factory config: {self._config.name}")
+            print(f"[OK] Loaded factory config: {self._config.name}")
             return self._config
             
         except Exception as e:
-            print(f"❌ Error loading config: {e}, using defaults")
+            print(f"[ERR] Error loading config: {e}, using defaults")
             self._config = FactoryConfig()
             return self._config
     

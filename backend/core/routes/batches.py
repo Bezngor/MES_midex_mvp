@@ -9,14 +9,30 @@ from uuid import UUID, uuid4
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.src.db.session import get_db
 from backend.core.models.batch import Batch
 from backend.core.models.enums import BatchStatus
 from backend.core.schemas.batch import BatchCreate, BatchUpdate, BatchResponse
 
+# Роутер для действий start/complete — подключается в main.py ПЕРВЫМ, чтобы пути
+# /api/v1/batches/start/{id} и /complete/{id} гарантированно сопоставлялись до общих /{batch_id}.
+router_actions = APIRouter(prefix="/api/v1/batches", tags=["batches"])
+
 router = APIRouter(prefix="/api/v1/batches", tags=["batches"])
+
+
+def _ensure_product_loaded(batch: Batch) -> None:
+    """Обеспечивает загрузку связи product (для product_name в ответе)."""
+    _ = batch.product
+
+
+def _batch_to_response(batch: Batch) -> dict:
+    """Сериализует батч в ответ с product_name для UI."""
+    data = BatchResponse.model_validate(batch).model_dump()
+    data["product_name"] = batch.product.product_name if batch.product else None
+    return data
 
 
 @router.post(
@@ -62,8 +78,9 @@ async def create_batch(
     db.add(batch)
     db.commit()
     db.refresh(batch)
+    _ensure_product_loaded(batch)
 
-    return {"success": True, "data": BatchResponse.model_validate(batch)}
+    return {"success": True, "data": _batch_to_response(batch)}
 
 
 @router.get(
@@ -90,11 +107,71 @@ async def list_batches(
     if parent_order_id is not None:
         query = query.filter(Batch.parent_order_id == parent_order_id)
 
-    items = query.all()
+    items = query.options(joinedload(Batch.product)).all()
     return {
         "success": True,
-        "data": [BatchResponse.model_validate(item) for item in items],
+        "data": [_batch_to_response(item) for item in items],
     }
+
+
+@router_actions.patch(
+    "/start/{batch_id}",
+    response_model=dict,
+    summary="Запустить батч",
+)
+async def start_batch(
+    batch_id: UUID,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Перевести батч в статус IN_PROGRESS и зафиксировать started_at."""
+    batch = db.query(Batch).filter(Batch.id == batch_id).first()
+    if batch is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Батч не найден.",
+        )
+    if batch.status != BatchStatus.PLANNED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Запуск возможен только для батча в статусе PLANNED. Текущий статус: {batch.status}.",
+        )
+    batch.status = BatchStatus.IN_PROGRESS.value
+    batch.started_at = datetime.utcnow()
+    db.add(batch)
+    db.commit()
+    db.refresh(batch)
+    _ensure_product_loaded(batch)
+    return {"success": True, "data": _batch_to_response(batch)}
+
+
+@router_actions.patch(
+    "/complete/{batch_id}",
+    response_model=dict,
+    summary="Завершить батч",
+)
+async def complete_batch(
+    batch_id: UUID,
+    db: Session = Depends(get_db),
+) -> dict:
+    """Перевести батч в статус COMPLETED и зафиксировать completed_at."""
+    batch = db.query(Batch).filter(Batch.id == batch_id).first()
+    if batch is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Батч не найден.",
+        )
+    if batch.status != BatchStatus.IN_PROGRESS.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Завершение возможно только для батча в статусе IN_PROGRESS. Текущий статус: {batch.status}.",
+        )
+    batch.status = BatchStatus.COMPLETED.value
+    batch.completed_at = datetime.utcnow()
+    db.add(batch)
+    db.commit()
+    db.refresh(batch)
+    _ensure_product_loaded(batch)
+    return {"success": True, "data": _batch_to_response(batch)}
 
 
 @router.get(
@@ -113,8 +190,8 @@ async def get_batch(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Батч не найден.",
         )
-
-    return {"success": True, "data": BatchResponse.model_validate(batch)}
+    _ensure_product_loaded(batch)
+    return {"success": True, "data": _batch_to_response(batch)}
 
 
 @router.patch(
@@ -145,8 +222,8 @@ async def update_batch(
     db.add(batch)
     db.commit()
     db.refresh(batch)
-
-    return {"success": True, "data": BatchResponse.model_validate(batch)}
+    _ensure_product_loaded(batch)
+    return {"success": True, "data": _batch_to_response(batch)}
 
 
 @router.delete(

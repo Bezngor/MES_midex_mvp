@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useScheduleStore } from '../../store/useScheduleStore';
+import { getWorkCenterDisplayName } from '../../utils/workCenterDisplayNames';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 
@@ -12,16 +13,20 @@ export const GanttChart: React.FC = () => {
   const [days, setDays] = useState(7);
 
   useEffect(() => {
-    const startDate = new Date().toISOString();
-    const endDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-    fetchGanttData(startDate, endDate);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
+    end.setHours(23, 59, 59, 999);
+    fetchGanttData(start.toISOString(), end.toISOString());
   }, [days, fetchGanttData]);
 
   if (loading) return <Loading message="Загрузка расписания..." />;
   if (error) return <Error message={error} onRetry={() => {
-    const startDate = new Date().toISOString();
-    const endDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-    fetchGanttData(startDate, endDate);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
+    end.setHours(23, 59, 59, 999);
+    fetchGanttData(start.toISOString(), end.toISOString());
   }} />;
 
   if (!ganttData) return <div className="p-4">Нет данных для отображения</div>;
@@ -79,7 +84,10 @@ export const GanttChart: React.FC = () => {
           {/* Заголовок с датами */}
           <div className="flex border-b mb-2 bg-gray-50">
             <div className="w-48 flex-shrink-0 p-2 font-semibold text-gray-800">Рабочий центр</div>
-            <div className="flex-1 grid grid-cols-7 gap-1">
+            <div
+              className="flex-1 grid gap-1"
+              style={{ gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))` }}
+            >
               {dates.map((date, idx) => (
                 <div key={idx} className="text-xs text-center p-1 border-r text-gray-800 font-medium">
                   {date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
@@ -91,7 +99,7 @@ export const GanttChart: React.FC = () => {
           {/* Рабочие центры и задачи */}
           {ganttData.work_centers.map((wc) => (
             <div key={wc.id} className="mb-4 border-b pb-4">
-              <div className="font-semibold mb-2 text-gray-800">{wc.name}</div>
+              <div className="font-semibold mb-2 text-gray-800">{getWorkCenterDisplayName(wc.name, wc.id)}</div>
               <div className="relative h-20 bg-gray-50 rounded">
                 {wc.tasks.map((task) => {
                   const position = getTaskPosition(task.start, task.end);

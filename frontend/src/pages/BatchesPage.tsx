@@ -12,7 +12,11 @@ import { useProductStore } from '../store/useProductStore';
 
 export const BatchesPage: React.FC = () => {
   const { createBatch } = useBatchStore();
-  const { products } = useProductStore();
+  const { products, fetchProducts } = useProductStore();
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);

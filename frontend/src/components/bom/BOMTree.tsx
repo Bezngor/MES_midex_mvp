@@ -2,12 +2,13 @@
  * Компонент дерева спецификации (BOM)
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useBOMStore } from '../../store/useBOMStore';
 import { useProductStore } from '../../store/useProductStore';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 import { Button } from '../common/Button';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 interface BOMTreeProps {
   productId: string;
@@ -16,6 +17,7 @@ interface BOMTreeProps {
 export const BOMTree: React.FC<BOMTreeProps> = ({ productId }) => {
   const { bomItems, loading, error, fetchBOMByProduct, deleteBOM } = useBOMStore();
   const { getProductById } = useProductStore();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; label: string } | null>(null);
 
   useEffect(() => {
     if (productId) {
@@ -49,11 +51,12 @@ export const BOMTree: React.FC<BOMTreeProps> = ({ productId }) => {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => {
-                      if (window.confirm('Удалить строку спецификации?')) {
-                        deleteBOM(bom.id);
-                      }
-                    }}
+                    onClick={() =>
+                      setDeleteConfirm({
+                        id: bom.id,
+                        label: `${childProduct?.product_name || bom.child_product_id} (${bom.quantity} ${bom.unit})`,
+                      })
+                    }
                   >
                     Удалить
                   </Button>
@@ -63,6 +66,15 @@ export const BOMTree: React.FC<BOMTreeProps> = ({ productId }) => {
           })}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && deleteBOM(deleteConfirm.id)}
+        title="Подтверждение удаления"
+        message={deleteConfirm ? `Удалить строку спецификации «${deleteConfirm.label}»?` : ''}
+        confirmLabel="Удалить"
+      />
     </div>
   );
 };

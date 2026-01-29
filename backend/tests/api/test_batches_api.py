@@ -75,6 +75,26 @@ def test_update_batch_status(client, sample_batch):
     assert data["data"]["status"] == "IN_PROGRESS"
 
 
+def test_start_batch_endpoint(client, sample_batch):
+    """Тест PATCH /api/v1/batches/start/{id} — переход PLANNED → IN_PROGRESS."""
+    response = client.patch(f"/api/v1/batches/start/{sample_batch.id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["data"]["status"] == "IN_PROGRESS"
+    assert data["data"]["started_at"] is not None
+
+
+def test_complete_batch_endpoint(client, sample_batch_in_progress):
+    """Тест PATCH /api/v1/batches/complete/{id} — переход IN_PROGRESS → COMPLETED."""
+    response = client.patch(f"/api/v1/batches/complete/{sample_batch_in_progress.id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["data"]["status"] == "COMPLETED"
+    assert data["data"]["completed_at"] is not None
+
+
 def test_delete_batch(client, sample_batch):
     """Тест DELETE /api/v1/batches/{id}."""
     response = client.delete(f"/api/v1/batches/{sample_batch.id}")

@@ -8,10 +8,12 @@ import { ProductType } from '../../services/types';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 import { Button } from '../common/Button';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 export const ProductList: React.FC = () => {
   const { products, loading, error, fetchProducts, deleteProduct } = useProductStore();
   const [filter, setFilter] = useState<ProductType | ''>('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -71,11 +73,7 @@ export const ProductList: React.FC = () => {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => {
-                        if (window.confirm('Удалить продукт?')) {
-                          deleteProduct(product.id);
-                        }
-                      }}
+                      onClick={() => setDeleteConfirm({ id: product.id, name: product.product_name })}
                     >
                       Удалить
                     </Button>
@@ -86,6 +84,15 @@ export const ProductList: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && deleteProduct(deleteConfirm.id)}
+        title="Подтверждение удаления"
+        message={deleteConfirm ? `Удалить продукт «${deleteConfirm.name}»? Это действие нельзя отменить.` : ''}
+        confirmLabel="Удалить"
+      />
     </div>
   );
 };

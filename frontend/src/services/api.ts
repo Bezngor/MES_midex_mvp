@@ -30,7 +30,9 @@ import type {
   DispatchPreviewResponse,
 } from '../types/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+// Базовый URL API: должен заканчиваться на /api/v1 для корректной работы маршрутов (batches/{id}/start и т.д.)
+const rawBase = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = rawBase.endsWith('/api/v1') ? rawBase : rawBase.replace(/\/?$/, '') + '/api/v1';
 
 // Axios instance с interceptors
 const api = axios.create({
@@ -126,17 +128,16 @@ export const batchesAPI = {
     return api.post('/batches', data);
   },
   start: async (id: string): Promise<ApiResponse<Batch>> => {
-    return api.patch(`/batches/${id}/start`);
+    return api.patch(`/batches/start/${id}`);
   },
   complete: async (id: string): Promise<ApiResponse<Batch>> => {
-    return api.patch(`/batches/${id}/complete`);
+    return api.patch(`/batches/complete/${id}`);
   },
   updateStatus: async (id: string, status: string): Promise<ApiResponse<Batch>> => {
-    // Используем start/complete endpoints или общий update
     if (status === 'IN_PROGRESS') {
-      return api.patch(`/batches/${id}/start`);
+      return api.patch(`/batches/start/${id}`);
     } else if (status === 'COMPLETED') {
-      return api.patch(`/batches/${id}/complete`);
+      return api.patch(`/batches/complete/${id}`);
     }
     throw new Error(`Неподдерживаемый статус: ${status}`);
   },

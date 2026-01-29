@@ -47,6 +47,7 @@ class BatchResponse(BatchCreate):
     """Схема чтения батча."""
 
     id: UUID
+    product_name: Optional[str] = Field(default=None, description="Наименование продукта (для отображения в UI).")
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     created_at: datetime

@@ -45,9 +45,10 @@ export const InventoryDashboard: React.FC = () => {
           className="border rounded px-3 py-2"
           value={filter}
           onChange={(e) => setFilter(e.target.value as 'FINISHED' | 'SEMI_FINISHED' | '')}
+          title="Фильтр по типу остатка: готовый к отгрузке или полуфабрикат"
         >
-          <option value="">Все статусы</option>
-          <option value="FINISHED">Готовая продукция</option>
+          <option value="">Все типы остатка</option>
+          <option value="FINISHED">Готовая продукция (к отгрузке)</option>
           <option value="SEMI_FINISHED">Полуфабрикаты</option>
         </select>
       </div>
@@ -129,8 +130,8 @@ export const InventoryDashboard: React.FC = () => {
                     <td className="border border-gray-300 p-2">
                       <span className={`px-2 py-1 rounded text-xs ${
                         item.product_status === 'FINISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {item.product_status}
+                      }`} title={item.product_status === 'FINISHED' ? 'Готовая продукция (к отгрузке)' : 'Полуфабрикат'}>
+                        {item.product_status === 'FINISHED' ? 'Готовая продукция' : 'Полуфабрикат'}
                       </span>
                     </td>
                     <td className="border border-gray-300 p-2 text-gray-900">
