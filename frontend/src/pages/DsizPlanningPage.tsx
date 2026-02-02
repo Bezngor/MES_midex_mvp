@@ -24,9 +24,17 @@ export const DsizPlanningPage: React.FC = () => {
     shift_2: { OPERATOR: 1, PACKER: 1, AUTO: 3 },
   });
   const [labelingMode, setLabelingMode] = useState<LabelingMode>('AUTO');
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const todayLocal = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD в локальной зоне
 
   const handleRunPlanning = async () => {
     clearError();
+    setValidationError(null);
+    if (planningDate < todayLocal) {
+      setValidationError('Дата начала планирования не может быть в прошлом');
+      return;
+    }
     const result = await runPlanning({
       planning_date: planningDate,
       horizon_days: horizonDays,
@@ -74,8 +82,9 @@ export const DsizPlanningPage: React.FC = () => {
               <input
                 id="planning-date"
                 type="date"
+                min={todayLocal}
                 value={planningDate}
-                onChange={(e) => setPlanningDate(e.target.value)}
+                onChange={(e) => { setPlanningDate(e.target.value); setValidationError(null); }}
                 className="w-full border rounded px-3 py-2"
               />
             </div>
@@ -133,7 +142,19 @@ export const DsizPlanningPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Ошибки */}
+        {/* Ошибки валидации и API */}
+        {validationError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-sm">
+            {validationError}
+            <button
+              type="button"
+              onClick={() => setValidationError(null)}
+              className="ml-2 underline"
+            >
+              Закрыть
+            </button>
+          </div>
+        )}
         {error && (
           <Error
             message={error}

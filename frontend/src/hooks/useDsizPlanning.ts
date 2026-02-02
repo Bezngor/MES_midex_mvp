@@ -23,15 +23,16 @@ export const useDsizPlanning = (): UseDsizPlanningReturn => {
     setLoading(true);
     setError(null);
     try {
-      const response: ApiResponse<DsizPlanningResponse> = await dsizPlanningAPI.runPlanning(request);
-      if (response.success) {
-        setPlanningData(response.data);
-        return response.data;
-      } else {
-        const errorMsg = response.error || 'Ошибка выполнения планирования';
-        setError(errorMsg);
+      const response = await dsizPlanningAPI.runPlanning(request);
+      const body = response as ApiResponse<DsizPlanningResponse> & DsizPlanningResponse;
+      if (body.success !== true) {
+        setError(body.error || 'Ошибка выполнения планирования');
         return null;
       }
+      // Бэкенд возвращает план «плоским» объектом { success, plan_id, operations, ... }, без обёртки data
+      const plan: DsizPlanningResponse = body.data ?? body;
+      setPlanningData(plan);
+      return plan;
     } catch (err: any) {
       const errorMsg = err.message || 'Неожиданная ошибка при выполнении планирования';
       setError(errorMsg);

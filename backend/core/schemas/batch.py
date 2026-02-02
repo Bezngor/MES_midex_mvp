@@ -35,6 +35,7 @@ class BatchCreate(BaseModel):
 class BatchUpdate(BaseModel):
     """Схема частичного обновления батча."""
 
+    quantity_kg: Optional[Decimal] = Field(default=None, gt=0, description="Плановый объём батча в кг.")
     status: Optional[BatchStatus] = None
     work_center_id: Optional[UUID] = None
     operator_id: Optional[str] = None
@@ -50,6 +51,10 @@ class BatchResponse(BatchCreate):
     product_name: Optional[str] = Field(default=None, description="Наименование продукта (для отображения в UI).")
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    posted_to_inventory_at: Optional[datetime] = Field(
+        default=None,
+        description="Время учёта партии в остатках; null — ещё не учтено.",
+    )
     created_at: datetime
     updated_at: datetime
 

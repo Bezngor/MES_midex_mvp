@@ -9,7 +9,7 @@
 - Управление мощностями
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
 from sqlalchemy.orm import Session, joinedload
@@ -21,6 +21,8 @@ from backend.core.models.route_operation import RouteOperation
 from backend.core.models.manufacturing_order import ManufacturingOrder
 from backend.core.models.manufacturing_route import ManufacturingRoute
 from backend.core.models.work_center_capacity import WorkCenterCapacity
+from backend.core.models.product import Product
+from backend.core.models.product_routing_rule import ProductRoutingRule
 from backend.core.models.enums import TaskStatus, WorkCenterStatus, OrderStatus, OrderPriority
 
 
@@ -108,13 +110,48 @@ class DispatchingService:
 
         return by_work_center
 
+    def _get_chosen_work_center_by_rules(self, order: ManufacturingOrder) -> Optional[UUID]:
+        """
+        По правилам product_routing_rules (приоритет, min/max количество) возвращает РЦ,
+        на который нужно направить заказ. Если ни одно правило не подошло — None.
+        """
+        try:
+            product = self.db.get(Product, UUID(str(order.product_id)))
+        except (ValueError, TypeError):
+            return None
+        if not product or not getattr(product, "product_code", None):
+            return None
+        product_code = (product.product_code or "").strip()
+        order_qty = float(order.quantity) if order.quantity is not None else 0
+        rules_query = (
+            select(ProductRoutingRule)
+            .where(ProductRoutingRule.product_code == product_code)
+            .order_by(ProductRoutingRule.priority_order.asc())
+        )
+        rules_list = self.db.execute(rules_query).scalars().all()
+        for rule in rules_list:
+            if rule.min_quantity is not None and order_qty < rule.min_quantity:
+                continue
+            if rule.max_quantity is not None and order_qty > rule.max_quantity:
+                continue
+            return rule.work_center_id
+        return None
+
+    def _get_ruled_work_center_ids(self, product_code: str) -> set:
+        """Множество work_center_id из правил выбора РЦ для данного продукта (подставляемые РЦ)."""
+        rules_query = (
+            select(ProductRoutingRule.work_center_id)
+            .where(ProductRoutingRule.product_code == product_code)
+        )
+        return {row[0] for row in self.db.execute(rules_query).fetchall()}
+
     def release_order(
         self,
         order_id: UUID,
         release_date: Optional[datetime] = None
     ) -> ManufacturingOrder:
         """
-        Выпустить заказ в производство (PLANNED → RELEASED).
+        Выпустить заказ в производство (PLANNED/SHIP/IN_WORK → RELEASED).
 
         Создаёт записи ProductionTask для каждой операции в маршруте.
 
@@ -129,10 +166,12 @@ class DispatchingService:
             ValueError: Если заказ не найден или уже выпущен
 
         Бизнес-правила:
-            - Заказ должен быть в статусе PLANNED
-            - Создаёт задачи на основе маршрута (если существует)
-            - Задачи наследуют приоритет от заказа
-            - Задачи начинаются в статусе QUEUED
+            - Заказ должен быть в статусе PLANNED, SHIP или IN_WORK (заказы из 1С)
+            - Один маршрут на продукт (типовой вариант). Правила product_routing_rules задают,
+              на какой РЦ направить заказ (по приоритету и min/max количество); операции маршрута
+              на «подставляемых» РЦ получают выбранный по правилам РЦ при создании задач.
+            - Создаёт задачи на основе маршрута
+            - Задачи наследуют приоритет от заказа, начинаются в статусе QUEUED
             - Статус заказа меняется на RELEASED
         """
         order = self.db.get(ManufacturingOrder, order_id)
@@ -140,9 +179,10 @@ class DispatchingService:
         if not order:
             raise ValueError(f"Заказ {order_id} не найден")
 
-        if order.status != OrderStatus.PLANNED:
+        releasable = (OrderStatus.PLANNED, OrderStatus.SHIP, OrderStatus.IN_WORK)
+        if order.status not in releasable:
             raise ValueError(
-                f"Заказ {order.order_number} не в статусе PLANNED (текущий: {order.status})"
+                f"Заказ {order.order_number} не в статусе PLANNED/SHIP/IN_WORK (текущий: {order.status})"
             )
 
         release_date = release_date or datetime.utcnow()
@@ -157,39 +197,51 @@ class DispatchingService:
         # Если задач нет, создаём их на основе маршрута
         # Для MVP: если задачи уже есть, просто меняем статус заказа
         if not existing_tasks:
-            # Получаем маршрут для продукта
-            route_query = select(ManufacturingRoute).where(
-                ManufacturingRoute.product_id == order.product_id
+            # Все маршруты для продукта
+            routes_query = (
+                select(ManufacturingRoute)
+                .where(ManufacturingRoute.product_id == order.product_id)
+                .order_by(ManufacturingRoute.id)
             )
-            route_result = self.db.execute(route_query)
-            route = route_result.scalar_one_or_none()
+            routes_result = self.db.execute(routes_query)
+            routes_list = routes_result.scalars().all()
 
-            if not route:
+            if not routes_list:
                 raise ValueError(
                     f"Маршрут производства не найден для продукта {order.product_id}. "
                     f"Создайте маршрут перед выпуском заказа в производство."
                 )
 
-            # Получаем операции маршрута
+            # Один маршрут на продукт (типовой вариант). Правила выбора РЦ задают, на какой РЦ направить заказ.
+            route = routes_list[0]
+            product = self.db.get(Product, UUID(str(order.product_id)))
+            product_code = (product.product_code or "").strip()
+            chosen_wc_id = self._get_chosen_work_center_by_rules(order)
+            ruled_wc_ids = self._get_ruled_work_center_ids(product_code)
+
             operations_query = (
                 select(RouteOperation)
                 .where(RouteOperation.route_id == route.id)
                 .order_by(RouteOperation.operation_sequence)
             )
-            operations_result = self.db.execute(operations_query)
-            operations = operations_result.scalars().all()
+            operations = self.db.execute(operations_query).scalars().all()
 
             if not operations:
                 raise ValueError(
                     f"Маршрут '{route.route_name}' не содержит операций"
                 )
 
-            # Создаём задачи для каждой операции
             for operation in operations:
+                # Если операция на РЦ из правил — подставляем выбранный по правилам РЦ; иначе — РЦ из маршрута
+                wc_id = (
+                    chosen_wc_id
+                    if (chosen_wc_id and operation.work_center_id in ruled_wc_ids)
+                    else operation.work_center_id
+                )
                 task = ProductionTask(
                     order_id=order.id,
                     operation_id=operation.id,
-                    work_center_id=operation.work_center_id,
+                    work_center_id=wc_id,
                     status=TaskStatus.QUEUED,
                 )
                 self.db.add(task)
@@ -201,6 +253,36 @@ class DispatchingService:
         self.db.commit()
         self.db.refresh(order)
 
+        return order
+
+    def cancel_release(self, order_id: UUID) -> ManufacturingOrder:
+        """
+        Отменить выпуск заказа (RELEASED → SHIP). Все задачи заказа переводится в CANCELLED.
+
+        Args:
+            order_id: ID производственного заказа
+
+        Returns:
+            Обновлённый ManufacturingOrder
+
+        Raises:
+            ValueError: Если заказ не найден или не в статусе RELEASED
+        """
+        order = self.db.get(ManufacturingOrder, order_id)
+        if not order:
+            raise ValueError(f"Заказ {order_id} не найден")
+        if order.status != OrderStatus.RELEASED:
+            raise ValueError(
+                f"Отменить выпуск можно только для заказа в статусе RELEASED (текущий: {order.status})"
+            )
+
+        for task in order.production_tasks:
+            task.status = TaskStatus.CANCELLED
+
+        order.status = OrderStatus.SHIP
+        order.updated_at = datetime.utcnow()
+        self.db.commit()
+        self.db.refresh(order)
         return order
 
     def dispatch_task(
@@ -547,36 +629,68 @@ class DispatchingService:
         }
 
         for wc in work_centers:
-            # Получаем задачи для этого рабочего центра в диапазоне дат
-            tasks = self.db.query(ProductionTask).filter(
-                ProductionTask.work_center_id == wc.id,
-                ProductionTask.started_at >= start_date,
-                ProductionTask.started_at <= end_date,
-                or_(
-                    ProductionTask.status == TaskStatus.IN_PROGRESS,
-                    ProductionTask.status == TaskStatus.QUEUED
+            # Задачи: IN_PROGRESS или QUEUED в диапазоне дат.
+            # Для QUEUED без started_at считаем по created_at (попадание в диапазон).
+            tasks_started = (
+                self.db.query(ProductionTask)
+                .filter(
+                    ProductionTask.work_center_id == wc.id,
+                    ProductionTask.started_at >= start_date,
+                    ProductionTask.started_at <= end_date,
+                    or_(
+                        ProductionTask.status == TaskStatus.IN_PROGRESS,
+                        ProductionTask.status == TaskStatus.QUEUED,
+                    ),
                 )
-            ).order_by(ProductionTask.started_at).all()
+                .order_by(ProductionTask.started_at)
+                .all()
+            )
+            tasks_queued_no_start = (
+                self.db.query(ProductionTask)
+                .filter(
+                    ProductionTask.work_center_id == wc.id,
+                    ProductionTask.status == TaskStatus.QUEUED,
+                    ProductionTask.started_at.is_(None),
+                    ProductionTask.created_at >= start_date,
+                    ProductionTask.created_at <= end_date,
+                )
+                .order_by(ProductionTask.created_at)
+                .all()
+            )
+            # Объединяем без дубликатов (QUEUED с started_at уже в tasks_started)
+            seen_ids = {t.id for t in tasks_started}
+            tasks = list(tasks_started)
+            for t in tasks_queued_no_start:
+                if t.id not in seen_ids:
+                    seen_ids.add(t.id)
+                    tasks.append(t)
+            tasks.sort(key=lambda t: (t.started_at or t.created_at) or datetime.min.replace(tzinfo=timezone.utc))
 
             task_data = []
             for task in tasks:
-                # Получаем имя задачи
                 task_name = "Задача без операции"
                 if task.route_operation:
                     task_name = task.route_operation.operation_name
                 elif task.manufacturing_order:
                     task_name = f"Производство {task.manufacturing_order.order_number}"
 
-                # Получаем приоритет
                 priority = "NORMAL"
                 if task.manufacturing_order and task.manufacturing_order.priority:
                     priority = task.manufacturing_order.priority
 
+                start = task.started_at or task.created_at
+                end = task.completed_at
+                if end is None and task.route_operation and start:
+                    mins = getattr(task.route_operation, "estimated_duration_minutes", None) or 60
+                    end = start + timedelta(minutes=mins)
+                elif end is None and start:
+                    end = start + timedelta(minutes=60)
+
                 task_data.append({
                     "id": task.id,
                     "name": task_name,
-                    "start": task.started_at,
-                    "end": task.completed_at,
+                    "start": start,
+                    "end": end,
                     "priority": priority,
                     "status": task.status.value,
                     "order_number": task.manufacturing_order.order_number if task.manufacturing_order else "N/A"

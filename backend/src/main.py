@@ -2,6 +2,9 @@
 FastAPI application entry point for MES SaaS platform.
 """
 
+import os
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -22,6 +25,8 @@ from backend.core.routes import (
     inventory,
     work_center_capacities,
     mrp,
+    validation,
+    dev,
 )
 from backend.customizations.dsiz.routes import dsiz_planning_router, dsiz_dispatching_router
 from backend.core.services.dispatching_service import DispatchingService
@@ -45,6 +50,7 @@ app = FastAPI(
 def load_config():
     config = get_factory_config()
     print(f"Loaded factory config: {config.name} ({config.location})")
+    print(f"CORS allowed origins: {_cors_origins}")
 
 # Custom OpenAPI schema with version 3.0.3 (Swagger UI compatible)
 def custom_openapi():
@@ -82,14 +88,44 @@ app.openapi = custom_openapi
 # Если в будущем core routes будут использовать Depends() для DispatchingService,
 # можно будет добавить функцию-зависимость и override через app.dependency_overrides.
 
-# Configure CORS
+# Configure CORS (with credentials, "*" is not allowed by browsers — use explicit origins)
+_dev_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+_cors_raw = os.getenv("CORS_ORIGINS", "").strip()
+_cors_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()] if _cors_raw else list(_dev_origins)
+_env = (os.getenv("ENVIRONMENT") or "").strip().lower()
+# В режиме разработки/теста или при незаданном ENVIRONMENT всегда разрешаем localhost (вариант 1 в TEST_RUN_GUIDE)
+if _env in ("", "development", "dev", "test"):
+    for o in _dev_origins:
+        if o not in _cors_origins:
+            _cors_origins.append(o)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+
+class ForceCORSHeadersMiddleware(BaseHTTPMiddleware):
+    """Добавляет CORS-заголовки ко всем ответам с разрешённого origin (в т.ч. при ошибках и preflight)."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        origin = request.headers.get("origin")
+        if origin and origin in _cors_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+
+app.add_middleware(ForceCORSHeadersMiddleware)
 
 # Mount routers
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
@@ -108,6 +144,8 @@ app.include_router(batches.router, tags=["batches"])
 app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
 app.include_router(mrp.router, tags=["MRP"])
+app.include_router(validation.router, tags=["validation"])
+app.include_router(dev.router)
 app.include_router(dsiz_planning_router, prefix="/api/v1", tags=["DSIZ"])
 app.include_router(dsiz_dispatching_router, prefix="/api/v1", tags=["DSIZ"])
 

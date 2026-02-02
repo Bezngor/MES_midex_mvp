@@ -10,9 +10,11 @@ from datetime import datetime
 
 from backend.src.db.session import get_db
 from backend.core.services.dispatching_service import DispatchingService
+from backend.core.services.validation_service import get_routes_and_rules_validation
 from backend.core.schemas.dispatching import (
     ReleaseOrderRequest,
     ReleaseOrderResponse,
+    CancelReleaseRequest,
     DispatchTaskRequest,
     DispatchTaskResponse,
     ScheduleResponse,
@@ -32,16 +34,26 @@ async def release_order(
     Выпустить заказ в производство (PLANNED → RELEASED).
 
     Создаёт записи ProductionTask и меняет статус заказа.
-
-    **Тело запроса:**
-    - `order_id`: ID производственного заказа
-    - `release_date`: Дата выпуска (опционально, по умолчанию: сейчас)
-
-    **Ответ:**
-    - `order`: Обновлённые данные заказа
-    - `tasks_created`: Количество созданных задач
+    Блокируется, если есть ГП без маршрутов или без правил выбора РЦ (см. GET /api/v1/validation/routes-and-rules).
     """
+    validation_data = get_routes_and_rules_validation(db)
+    if not validation_data["ok"]:
+        parts = []
+        if validation_data["missing_in_routes"]:
+            parts.append(f"нет в маршрутах: {', '.join(validation_data['missing_in_routes'][:10])}")
+        if validation_data["missing_in_rules"]:
+            parts.append(f"нет в правилах выбора РЦ: {', '.join(validation_data['missing_in_rules'][:10])}")
+        if len(validation_data["missing_in_routes"]) > 10 or len(validation_data["missing_in_rules"]) > 10:
+            parts.append("…")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Система не готова к запуску. Довнесите данные для ГП и проверьте снова. {'; '.join(parts)}"
+        )
+
     service = DispatchingService(db)
+
+    def _status_str(s):
+        return getattr(s, "value", s) if s is not None else None
 
     try:
         order = service.release_order(
@@ -49,8 +61,8 @@ async def release_order(
             release_date=request.release_date
         )
 
-        # Подсчитываем задачи
-        tasks_count = len([t for t in order.production_tasks if t.status.value == "QUEUED"])
+        # Подсчитываем задачи (status после refresh может быть enum или строка)
+        tasks_count = len([t for t in order.production_tasks if _status_str(t.status) == "QUEUED"])
 
         return {
             "success": True,
@@ -58,7 +70,7 @@ async def release_order(
                 "order": {
                     "id": order.id,
                     "order_number": order.order_number,
-                    "status": order.status.value,
+                    "status": _status_str(order.status),
                     "updated_at": order.updated_at
                 },
                 "tasks_created": tasks_count
@@ -69,6 +81,39 @@ async def release_order(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
+
+
+@router.post("/cancel-release", response_model=ReleaseOrderResponse)
+async def cancel_release(
+    request: CancelReleaseRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Отменить выпуск заказа (RELEASED → SHIP). Задачи заказа переводится в CANCELLED.
+    """
+    service = DispatchingService(db)
+    try:
+        order = service.cancel_release(order_id=request.order_id)
+        return {
+            "success": True,
+            "data": {
+                "order": {
+                    "id": order.id,
+                    "order_number": order.order_number,
+                    "status": _status_str(order.status),
+                    "updated_at": order.updated_at
+                }
+            }
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+def _status_str(s):
+    return getattr(s, "value", s) if s is not None else None
 
 
 @router.post("/dispatch-task", response_model=DispatchTaskResponse)
@@ -103,7 +148,7 @@ async def dispatch_task(
                     "id": task.id,
                     "task_name": task.route_operation.operation_name if task.route_operation else "Задача",
                     "work_center_id": task.work_center_id,
-                    "status": task.status.value,
+                    "status": _status_str(task.status),
                     "scheduled_start": task.started_at,
                     "scheduled_end": task.completed_at
                 }

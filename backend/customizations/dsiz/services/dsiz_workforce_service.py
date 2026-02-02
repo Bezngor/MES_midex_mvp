@@ -104,7 +104,7 @@ class DSIZWorkforceService:
         Согласно спецификации:
         - WC_REACTOR_MAIN: 1 OPERATOR (mandatory)
         - WC_TUBE_LINE_1: 1 OPERATOR + 1 PACKER (оба mandatory)
-        - WC_AUTO_LIQUID_SOAP: 4 OPERATOR (min_degraded=3, factor=0.5)
+        - WC_FILL_LINE_1, WC_FILL_LINE_2: 4 OPERATOR (min_degraded=3, factor=0.5)
         """
         # Реактор: 1 оператор (обязательно)
         self._requirements_cache["WC_REACTOR_MAIN"] = {
@@ -129,16 +129,17 @@ class DSIZWorkforceService:
             )
         }
         
-        # Авто-розлив: 4 оператора (3=0.5 rate)
-        self._requirements_cache["WC_AUTO_LIQUID_SOAP"] = {
-            "OPERATOR": WorkforceRequirement(
-                role_name="OPERATOR",
-                required_count=4,
-                is_mandatory=False,  # Не обязательны все 4
-                min_count_for_degraded_mode=3,
-                degradation_factor=0.5
-            )
-        }
+        # Линии розлива 1 и 2: по 4 оператора (3=0.5 rate)
+        for wc_name in ("WC_FILL_LINE_1", "WC_FILL_LINE_2"):
+            self._requirements_cache[wc_name] = {
+                "OPERATOR": WorkforceRequirement(
+                    role_name="OPERATOR",
+                    required_count=4,
+                    is_mandatory=False,  # Не обязательны все 4
+                    min_count_for_degraded_mode=3,
+                    degradation_factor=0.5
+                )
+            }
     
     def can_run(self, work_center_id: str, staff_state: Dict[str, int]) -> bool:
         """

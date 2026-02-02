@@ -4,8 +4,10 @@ API-роуты для управления продуктами (Product).
 
 from __future__ import annotations
 
+import os
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -31,9 +33,15 @@ async def create_product(
 ) -> dict:
     """Создать новый продукт.
 
+    Если `product_code` не указан — генерируется автоматически (PRD-YYYYMMDD-XXXXXXXX).
     Проверяет уникальность `product_code`.
     """
-    existing = db.query(Product).filter(Product.product_code == payload.product_code).first()
+    product_code = payload.product_code
+    if not product_code:
+        timestamp = datetime.utcnow().strftime("%Y%m%d")
+        product_code = f"PRD-{timestamp}-{uuid4().hex[:8].upper()}"
+
+    existing = db.query(Product).filter(Product.product_code == product_code).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -41,7 +49,7 @@ async def create_product(
         )
 
     product = Product(
-        product_code=payload.product_code,
+        product_code=product_code,
         product_name=payload.product_name,
         product_type=payload.product_type.value,
         unit_of_measure=payload.unit_of_measure,
@@ -68,10 +76,12 @@ async def list_products(
         description="Фильтр по типу продукта.",
     ),
     skip: int = Query(0, ge=0, description="Смещение."),
-    limit: int = Query(100, ge=1, le=200, description="Максимальное количество записей."),
+    limit: int = Query(500, ge=1, description="Максимальное количество записей."),
     db: Session = Depends(get_db),
 ) -> dict:
-    """Получить список продуктов с фильтрацией по типу."""
+    """Получить список продуктов с фильтрацией по типу. В production лимит не ограничивается (полный справочник)."""
+    _max_limit = 100_000 if (os.getenv("ENVIRONMENT") or "").strip().lower() == "production" else 5000
+    limit = min(limit, _max_limit)
     query = db.query(Product)
     if product_type is not None:
         query = query.filter(Product.product_type == product_type.value)

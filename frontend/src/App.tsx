@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Dashboard } from './pages/Dashboard';
 import { ProductsPage } from './pages/ProductsPage';
 import { BOMPage } from './pages/BOMPage';
@@ -61,10 +62,24 @@ function App() {
         <Navigation />
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/products" element={<ProductsPage />} />
+          <Route
+            path="/products"
+            element={
+              <ErrorBoundary>
+                <ProductsPage />
+              </ErrorBoundary>
+            }
+          />
           <Route path="/bom" element={<BOMPage />} />
           <Route path="/batches" element={<BatchesPage />} />
-          <Route path="/inventory" element={<InventoryPage />} />
+          <Route
+            path="/inventory"
+            element={
+              <ErrorBoundary>
+                <InventoryPage />
+              </ErrorBoundary>
+            }
+          />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/mrp" element={<MRPPage />} />
           <Route path="/dsiz/planning" element={<DsizPlanningPage />} />

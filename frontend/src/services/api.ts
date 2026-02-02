@@ -10,6 +10,7 @@ import type {
   BOMCreate,
   Batch,
   BatchCreate,
+  BatchUpdate,
   InventoryBalance,
   InventoryAdjustment,
   Task,
@@ -69,8 +70,8 @@ api.interceptors.response.use(
 // Products API
 // =====================
 export const productsAPI = {
-  getAll: async (): Promise<ApiResponse<Product[]>> => {
-    return api.get('/products');
+  getAll: async (params?: { limit?: number; skip?: number; product_type?: string }): Promise<ApiResponse<Product[]>> => {
+    return api.get('/products', { params: params ?? {} });
   },
   getById: async (id: string): Promise<ApiResponse<Product>> => {
     return api.get(`/products/${id}`);
@@ -141,6 +142,18 @@ export const batchesAPI = {
     }
     throw new Error(`Неподдерживаемый статус: ${status}`);
   },
+  /** Общий PATCH батча — корректировка полей (статус, оператор, времена и т.д.) в любом статусе. */
+  update: async (id: string, data: BatchUpdate): Promise<ApiResponse<Batch>> => {
+    return api.patch(`/batches/${id}`, data);
+  },
+  /** Учесть завершённую партию в остатках (для партий, завершённых до автоучёта). */
+  postToInventory: async (id: string): Promise<ApiResponse<Batch>> => {
+    return api.post(`/batches/${id}/post-to-inventory`);
+  },
+  /** Отменить учёт партии в остатках (уменьшить остаток на количество партии). */
+  undoPostToInventory: async (id: string): Promise<ApiResponse<Batch>> => {
+    return api.post(`/batches/${id}/undo-post-to-inventory`);
+  },
 };
 
 // =====================
@@ -168,6 +181,9 @@ export const inventoryAPI = {
 export const dispatchingAPI = {
   releaseOrder: async (orderId: string, releaseDate?: string): Promise<ApiResponse<{ order: ManufacturingOrder; tasks_created: number }>> => {
     return api.post('/dispatching/release-order', { order_id: orderId, release_date: releaseDate });
+  },
+  cancelRelease: async (orderId: string): Promise<ApiResponse<{ order: ManufacturingOrder }>> => {
+    return api.post('/dispatching/cancel-release', { order_id: orderId });
   },
   dispatchTask: async (taskId: string, workCenterId: string, scheduledStart: string): Promise<ApiResponse<Task>> => {
     return api.post('/dispatching/dispatch-task', {
@@ -252,6 +268,41 @@ export const tasksAPI = {
   },
   getById: async (taskId: string): Promise<ApiResponse<Task>> => {
     return api.get(`/production-tasks/${taskId}`);
+  },
+};
+
+// =====================
+// Validation API (маршруты и правила выбора РЦ для ГП)
+// =====================
+export interface RoutesAndRulesValidationDetail {
+  product_code: string;
+  product_name: string | null;
+  in_routes: boolean;
+  in_rules: boolean;
+}
+
+export interface RoutesAndRulesValidationData {
+  ok: boolean;
+  missing_in_routes: string[];
+  missing_in_rules: string[];
+  product_count: number;
+  routes_ok_count: number;
+  rules_ok_count: number;
+  /** Число различных product_id, у которых есть маршрут с операциями (для диагностики). 0 = backend, возможно, подключён к другой БД. */
+  routes_with_ops_count?: number;
+  details: RoutesAndRulesValidationDetail[];
+}
+
+export const validationAPI = {
+  getRoutesAndRules: async (): Promise<ApiResponse<RoutesAndRulesValidationData>> => {
+    return api.get('/validation/routes-and-rules');
+  },
+};
+
+/** API только для тестовой среды (в production эндпоинты возвращают 403). */
+export const devAPI = {
+  resetAllTables: async (): Promise<ApiResponse<{ message: string }>> => {
+    return api.post('/dev/reset-all-tables');
   },
 };
 

@@ -17,7 +17,7 @@ from backend.core.models.enums import ProductType
 class ProductCreate(BaseModel):
     """Схема создания продукта."""
 
-    product_code: str = Field(..., max_length=100, description="Уникальный код продукта (SKU).")
+    product_code: Optional[str] = Field(default=None, max_length=100, description="Уникальный код продукта (SKU). Если не указан — генерируется автоматически.")
     product_name: str = Field(..., max_length=255, description="Наименование продукта.")
     product_type: ProductType = Field(..., description="Тип продукта.")
     unit_of_measure: str = Field(..., max_length=20, description="Единица измерения (шт, кг и т.д.).")

@@ -18,8 +18,14 @@ workforce:
       required_count: 1
       is_mandatory: true
   
-  # Авто-розлив: 4 оператора (3=0.5 rate)
-  WC_AUTO_LIQUID_SOAP:
+  # Линии розлива 1 и 2: по 4 оператора (3=0.5 rate)
+  WC_FILL_LINE_1:
+    OPERATOR:
+      required_count: 4
+      is_mandatory: false
+      min_count_for_degraded_mode: 3
+      degradation_factor: 0.5
+  WC_FILL_LINE_2:
     OPERATOR:
       required_count: 4
       is_mandatory: false
@@ -58,4 +64,4 @@ product_routing:
 base_rates:
   # Примеры скоростей по продуктам и центрам
   # product_sku: WC_ID: rate_units_per_hour
-  # "Спрей100мл": "WC_AUTO_LIQUID_SOAP": 5000
+  # "Спрей100мл": "WC_FILL_LINE_1": 5000

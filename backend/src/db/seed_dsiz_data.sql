@@ -16,15 +16,21 @@
 -- Пример для DSIZ:
 --   WC_REACTOR_MAIN - Реактор основной
 --   WC_TUBE_LINE_1 - Линия тубировки 1
---   WC_AUTO_LIQUID_SOAP - Автоматическая линия розлива жидкого мыла
+--   WC_FILL_LINE_1, WC_FILL_LINE_2 - Линии розлива (идентичны по возможностям)
+--   WC_CHZ_MANUAL_AREA - Зона ручной маркировки ЧЗ (при сбое принтера на автомат. линиях)
 
 -- Создание рабочих центров DSIZ (если ещё нет — ON CONFLICT DO NOTHING)
 INSERT INTO work_centers (id, name, resource_type, status, capacity_units_per_hour, batch_capacity_kg, cycles_per_shift, parallel_capacity, created_at, updated_at)
 VALUES
     ('00000000-0000-0000-0000-000000000001'::uuid, 'WC_REACTOR_MAIN', 'MACHINE', 'AVAILABLE', 100.0, 2000.0, 2, 1, NOW(), NOW()),
     ('00000000-0000-0000-0000-000000000002'::uuid, 'WC_TUBE_LINE_1', 'MACHINE', 'AVAILABLE', 150.0, NULL, NULL, 1, NOW(), NOW()),
-    ('00000000-0000-0000-0000-000000000003'::uuid, 'WC_AUTO_LIQUID_SOAP', 'MACHINE', 'AVAILABLE', 200.0, NULL, NULL, 4, NOW(), NOW())
+    ('00000000-0000-0000-0000-000000000003'::uuid, 'WC_FILL_LINE_1', 'MACHINE', 'AVAILABLE', 200.0, NULL, NULL, 4, NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000004'::uuid, 'WC_FILL_LINE_2', 'MACHINE', 'AVAILABLE', 200.0, NULL, NULL, 4, NOW(), NOW()),
+    ('00000000-0000-0000-0000-000000000005'::uuid, 'WC_CHZ_MANUAL_AREA', 'WORKSTATION', 'AVAILABLE', 100.0, NULL, NULL, 10, NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
+
+-- Переименование старого имени (если БД создавалась до перехода на WC_FILL_LINE_*)
+UPDATE work_centers SET name = 'WC_FILL_LINE_1', updated_at = NOW() WHERE id = '00000000-0000-0000-0000-000000000003'::uuid AND name = 'WC_AUTO_LIQUID_SOAP';
 
 -- ============================================================================
 -- 2. Создание продуктов из bom_test.csv (примеры)
@@ -101,7 +107,7 @@ ON CONFLICT (from_compatibility_group, to_compatibility_group) DO NOTHING;
 -- Примеры маршрутизации для продуктов из bom_test.csv
 -- Кремы (GECO) → WC_TUBE_LINE_1 (приоритет 1 - авто)
 -- Пасты (СЕВЕРЯНИН) → WC_TUBE_LINE_1 (приоритет 2 - полуавто)
--- Жидкое мыло → WC_AUTO_LIQUID_SOAP (приоритет 1, мин. количество 5000)
+-- Жидкое мыло → WC_FILL_LINE_1, WC_FILL_LINE_2 (приоритет 1, мин. количество 5000)
 
 -- Кремы GECO на тубировку
 INSERT INTO dsiz_product_work_center_routing (product_sku, work_center_id, is_allowed, min_quantity_for_wc, priority_order, created_at)
@@ -133,7 +139,7 @@ WHERE p.product_code IN ('00-00000952', '00-00001055')
   AND wc.name = 'WC_TUBE_LINE_1'
 ON CONFLICT (product_sku, work_center_id) DO NOTHING;
 
--- Жидкое мыло на авто-розлив
+-- Жидкое мыло на линии розлива 1 и 2
 INSERT INTO dsiz_product_work_center_routing (product_sku, work_center_id, is_allowed, min_quantity_for_wc, priority_order, created_at)
 SELECT 
     p.product_code,
@@ -145,7 +151,7 @@ SELECT
 FROM products p
 CROSS JOIN work_centers wc
 WHERE p.product_code IN ('00-00000023', 'БП-00000111')
-  AND wc.name = 'WC_AUTO_LIQUID_SOAP'
+  AND wc.name IN ('WC_FILL_LINE_1', 'WC_FILL_LINE_2')
 ON CONFLICT (product_sku, work_center_id) DO NOTHING;
 
 -- ============================================================================
@@ -182,7 +188,7 @@ WHERE p.product_code IN ('00-00000952', '00-00001055')
   AND wc.name = 'WC_TUBE_LINE_1'
 ON CONFLICT DO NOTHING;
 
--- Жидкое мыло на авто-розливе
+-- Жидкое мыло на линиях розлива 1 и 2
 INSERT INTO dsiz_base_rates (product_sku, work_center_id, base_rate_units_per_hour, is_human_dependent)
 SELECT 
     p.product_code,
@@ -192,7 +198,7 @@ SELECT
 FROM products p
 CROSS JOIN work_centers wc
 WHERE p.product_code IN ('00-00000023', 'БП-00000111')
-  AND wc.name = 'WC_AUTO_LIQUID_SOAP'
+  AND wc.name IN ('WC_FILL_LINE_1', 'WC_FILL_LINE_2')
 ON CONFLICT DO NOTHING;
 
 -- ============================================================================
@@ -200,7 +206,7 @@ ON CONFLICT DO NOTHING;
 -- ============================================================================
 -- WC_REACTOR_MAIN: 1 OPERATOR (mandatory)
 -- WC_TUBE_LINE_1: 1 OPERATOR + 1 PACKER (оба mandatory)
--- WC_AUTO_LIQUID_SOAP: 4 OPERATOR (min_degraded=3, factor=0.5)
+-- WC_FILL_LINE_1, WC_FILL_LINE_2: 4 OPERATOR (min_degraded=3, factor=0.5)
 
 -- Реактор: 1 оператор (обязательно)
 INSERT INTO dsiz_workforce_requirements (work_center_id, role_name, required_count, is_mandatory, min_count_for_degraded_mode, degradation_factor)
@@ -240,7 +246,7 @@ FROM work_centers wc
 WHERE wc.name = 'WC_TUBE_LINE_1'
 ON CONFLICT (work_center_id, role_name) DO NOTHING;
 
--- Авто-розлив: 4 оператора (3=0.5 rate)
+-- Линии розлива 1 и 2: по 4 оператора (3=0.5 rate)
 INSERT INTO dsiz_workforce_requirements (work_center_id, role_name, required_count, is_mandatory, min_count_for_degraded_mode, degradation_factor)
 SELECT 
     wc.id,
@@ -250,7 +256,7 @@ SELECT
     3,
     0.5
 FROM work_centers wc
-WHERE wc.name = 'WC_AUTO_LIQUID_SOAP'
+WHERE wc.name IN ('WC_FILL_LINE_1', 'WC_FILL_LINE_2')
 ON CONFLICT (work_center_id, role_name) DO NOTHING;
 
 -- ============================================================================

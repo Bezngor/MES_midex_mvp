@@ -80,15 +80,85 @@ POST /api/v1/mrp/net-requirement
   "product_id": "uuid-bulk-cream",
   "gross_requirement": 900
 }
-Create Bulk Order
-bash
-POST /api/v1/mrp/create-bulk-order
+Create Bulk Order (контракт для Swagger)
+
+**Метод и путь:** `POST /api/v1/mrp/create-bulk-order`
+
+**Тело запроса (JSON):**
+
+| Поле | Тип | Обязательное | Описание |
+|------|-----|--------------|----------|
+| `bulk_product_id` | UUID | да | UUID **продукта** типа BULK (масса), не UUID заказа |
+| `quantity_kg` | number | да | Нетто-потребность в кг (будет округлена до батча) |
+| `due_date` | string (ISO 8601) | да | Крайний срок выполнения заказа |
+| `parent_order_id` | UUID | нет | Родительский заказ (для связки с заказом ГП) |
+
+**Пример запроса:**
+```json
 {
-  "parent_order_id": "uuid-parent-order",  # Optional
-  "bulk_product_id": "uuid-bulk-cream",
-  "quantity_kg": 900,
-  "due_date": "2026-01-21T12:00:00Z"
+  "bulk_product_id": "9b7ae0fc-51f3-49d3-baab-1776381ed989",
+  "quantity_kg": 1200,
+  "due_date": "2026-02-15T12:00:00Z"
 }
+```
+С опциональным родителем (подставьте реальный UUID заказа из списка заказов; иначе поле не передавайте):
+```json
+{
+  "parent_order_id": "171802b2-d48c-4a46-8cef-e6c01e9e6065",
+  "bulk_product_id": "9b7ae0fc-51f3-49d3-baab-1776381ed989",
+  "quantity_kg": 1200,
+  "due_date": "2026-02-15T12:00:00Z"
+}
+```
+**Важно:** `parent_order_id` должен быть валидным UUID (например, `id` из GET заказов). Нельзя подставлять текст вроде `"uuid-родительского-заказа"` — будет ошибка валидации.
+
+**Ответ 200 (success: true):**
+
+| Поле | Описание |
+|------|----------|
+| `data.order` | Созданный производственный заказ |
+| `data.order.id` | UUID заказа |
+| `data.order.order_number` | Номер вида `BULK-YYYYMMDD-NNNN` |
+| `data.order.product_id` | UUID продукта (BULK) |
+| `data.order.quantity` | Количество после округления (= rounded_quantity) |
+| `data.order.status` | `PLANNED` |
+| `data.order.order_type` | `INTERNAL_BULK` |
+| `data.order.parent_order_id` | UUID родителя или null |
+| `data.order.due_date` | Крайний срок |
+| `data.rounded_quantity` | Количество после округления до батча (≥ quantity_kg) |
+| `data.original_quantity` | Переданное quantity_kg |
+
+**Пример ответа:**
+```json
+{
+  "success": true,
+  "data": {
+    "order": {
+      "id": "uuid-заказа",
+      "order_number": "BULK-20260215-0001",
+      "product_id": "9b7ae0fc-51f3-49d3-baab-1776381ed989",
+      "quantity": 2000,
+      "status": "PLANNED",
+      "order_type": "INTERNAL_BULK",
+      "parent_order_id": null,
+      "due_date": "2026-02-15T12:00:00Z"
+    },
+    "rounded_quantity": 2000,
+    "original_quantity": 1200
+  }
+}
+```
+
+**Округление до батча:**
+- Продукт должен быть типа **BULK** и иметь `min_batch_size_kg`, `batch_size_step_kg`.
+- `rounded_quantity` = округление **вверх** до кратности `batch_size_step_kg`, но не меньше `min_batch_size_kg`.
+- Пример: quantity_kg=1200, step=1000 → 2000; quantity_kg=500, min=1000 → 1000.
+- Если в конфиге отключено batch_rounding или у продукта нет step — возвращается quantity_kg без округления.
+
+**Ошибки:**
+- **400** — продукт не найден, не BULK, или нет batch_size_step_kg (сообщение в `detail`).
+- **500** — внутренняя ошибка.
+
 Business Rules
 Only SHIP orders are consolidated (IN_WORK orders planned for future iterations)
 

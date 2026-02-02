@@ -49,25 +49,25 @@ def test_reactor_with_extra_operator():
 def test_auto_can_run_with_3():
     """Тест: авто-линия может работать с 3 операторами (degraded mode)."""
     workforce = DSIZWorkforceService()
-    assert workforce.can_run("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 3})
+    assert workforce.can_run("WC_FILL_LINE_1", {"OPERATOR": 3})
 
 
 def test_auto_can_run_with_4():
     """Тест: авто-линия может работать с 4 операторами (full mode)."""
     workforce = DSIZWorkforceService()
-    assert workforce.can_run("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 4})
+    assert workforce.can_run("WC_FILL_LINE_1", {"OPERATOR": 4})
 
 
 def test_auto_cannot_run_with_2():
     """Тест: авто-линия не может работать с 2 операторами."""
     workforce = DSIZWorkforceService()
-    assert not workforce.can_run("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 2})
+    assert not workforce.can_run("WC_FILL_LINE_1", {"OPERATOR": 2})
 
 
 def test_auto_cannot_run_with_0():
     """Тест: авто-линия не может работать без операторов."""
     workforce = DSIZWorkforceService()
-    assert not workforce.can_run("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 0})
+    assert not workforce.can_run("WC_FILL_LINE_1", {"OPERATOR": 0})
 
 
 def test_unknown_work_center():
@@ -84,21 +84,21 @@ def test_unknown_work_center():
 def test_auto_degradation_3_operators():
     """Тест: авто-линия с 3 операторами даёт 0.5 rate."""
     workforce = DSIZWorkforceService()
-    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 3}, 1000)
+    rate = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 3}, 1000)
     assert rate == 500
 
 
 def test_auto_full_rate_4_operators():
     """Тест: авто-линия с 4 операторами даёт полную скорость."""
     workforce = DSIZWorkforceService()
-    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 4}, 1000)
+    rate = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 4}, 1000)
     assert rate == 1000
 
 
 def test_auto_full_rate_5_operators():
     """Тест: авто-линия с 5 операторами даёт полную скорость (не более базовой)."""
     workforce = DSIZWorkforceService()
-    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 5}, 1000)
+    rate = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 5}, 1000)
     assert rate == 1000
 
 
@@ -127,10 +127,10 @@ def test_auto_rate_with_different_base():
     """Тест: авто-линия с разной базовой скоростью."""
     workforce = DSIZWorkforceService()
     # 3 оператора → 0.5
-    rate1 = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 3}, 2000)
+    rate1 = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 3}, 2000)
     assert rate1 == 1000
     # 4 оператора → 1.0
-    rate2 = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 4}, 2000)
+    rate2 = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 4}, 2000)
     assert rate2 == 2000
 
 
@@ -206,10 +206,10 @@ def test_full_workflow():
     workforce = DSIZWorkforceService()
     
     # Проверка возможности работы
-    assert workforce.can_run("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 3})
+    assert workforce.can_run("WC_FILL_LINE_1", {"OPERATOR": 3})
     
     # Расчёт эффективной скорости
-    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 3}, 1000)
+    rate = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 3}, 1000)
     assert rate == 500
     
     # Расчёт резерва
@@ -231,7 +231,7 @@ def test_config_loading_with_missing_file():
     # Должны быть загружены требования по умолчанию
     assert "WC_REACTOR_MAIN" in workforce._requirements_cache
     assert "WC_TUBE_LINE_1" in workforce._requirements_cache
-    assert "WC_AUTO_LIQUID_SOAP" in workforce._requirements_cache
+    assert "WC_FILL_LINE_1" in workforce._requirements_cache
 
 
 def test_config_loading_with_empty_workforce_section():
@@ -373,7 +373,7 @@ def test_config_loading_with_file_read_error():
             # Проверяем, что дефолтные требования загружены
             assert "WC_REACTOR_MAIN" in workforce._requirements_cache
             assert "WC_TUBE_LINE_1" in workforce._requirements_cache
-            assert "WC_AUTO_LIQUID_SOAP" in workforce._requirements_cache
+            assert "WC_FILL_LINE_1" in workforce._requirements_cache
 
 
 def test_config_loading_with_missing_role_config():
@@ -490,7 +490,7 @@ def test_get_effective_rate_with_full_staff():
     """Тест: эффективная скорость при полной укомплектованности."""
     workforce = DSIZWorkforceService()
     # Авто-линия с 4 операторами (полная укомплектованность)
-    rate = workforce.get_effective_rate("WC_AUTO_LIQUID_SOAP", {"OPERATOR": 4}, 1000)
+    rate = workforce.get_effective_rate("WC_FILL_LINE_1", {"OPERATOR": 4}, 1000)
     assert rate == 1000  # Полная скорость
 
 

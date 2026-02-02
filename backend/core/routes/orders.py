@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from backend.src.db.session import get_db
 from backend.core.models.enums import OrderStatus
+from backend.core.models.product import Product
 from backend.core.schemas.manufacturing_order import (
     ManufacturingOrderCreate,
     ManufacturingOrderRead,
@@ -99,11 +100,29 @@ async def list_manufacturing_orders(
 ):
     """
     List manufacturing orders with optional filtering and pagination.
+    В ответ добавляются product_name и product_code для отображения в UI.
     """
     service = OrderService(db)
     orders = service.list_orders(status=status, limit=limit, offset=offset)
 
+    product_ids = []
+    for o in orders:
+        try:
+            product_ids.append(UUID(str(o.product_id)))
+        except (ValueError, TypeError):
+            pass
+    products = db.query(Product).filter(Product.id.in_(product_ids)).all() if product_ids else []
+    product_info = {str(p.id): {"name": p.product_name, "code": p.product_code} for p in products}
+
+    data = []
+    for order in orders:
+        row = ManufacturingOrderRead.model_validate(order).model_dump()
+        info = product_info.get(str(order.product_id))
+        row["product_name"] = info["name"] if info else None
+        row["product_code"] = info["code"] if info else None
+        data.append(row)
+
     return {
         "success": True,
-        "data": [ManufacturingOrderRead.model_validate(order) for order in orders],
+        "data": data,
     }

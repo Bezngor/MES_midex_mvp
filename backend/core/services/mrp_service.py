@@ -9,7 +9,7 @@ MRP (Material Requirements Planning) Service.
 - Создание зависимых заказов на варку
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -68,91 +68,99 @@ class MRPService:
             ]
         
         Бизнес-правила:
-            - Учитываются только SHIP и IN_WORK заказы
-            - Расчёт приоритета для SHIP заказов:
-              - <7 дней: URGENT
-              - 7-14 дней: HIGH
-              - 14-30 дней: NORMAL
-              - >30 дней: LOW
-            - IN_WORK заказы добавляются только при наличии мощностей (MVP: всегда добавляются)
+            - 1.1 Агрегируем ГП из «Отгрузить» и «Образец» и распределяем по URGENT/HIGH/NORMAL/LOW (по дате).
+            - 1.2 Агрегируем ГП из «В работе» и распределяем по NORMAL/LOW (по дате).
+            - 1.3 Объединяем: приоритет строки = наивысший уровень, по которому есть количество (URGENT > HIGH > NORMAL > LOW).
         """
         config = get_factory_config()
         horizon = horizon_days or config.planning.mrp_horizon_days
-        cutoff_date = datetime.utcnow() + timedelta(days=horizon)
+        now_utc = datetime.now(timezone.utc)
+        cutoff_date = now_utc + timedelta(days=horizon)
         
-        # Получаем SHIP заказы в пределах горизонта
         ship_orders = self.db.query(ManufacturingOrder).filter(
             ManufacturingOrder.status == OrderStatus.SHIP,
             ManufacturingOrder.due_date <= cutoff_date
         ).all()
         
-        # Получаем IN_WORK заказы
-        in_work_orders = self.db.query(ManufacturingOrder).filter(
-            ManufacturingOrder.status == OrderStatus.IN_WORK
-        ).all()
-        
-        # Группируем по продукту
         product_map: Dict[str, Dict] = {}
+        priority_levels = (OrderPriority.URGENT.value, OrderPriority.HIGH.value, OrderPriority.NORMAL.value, OrderPriority.LOW.value)
         
         for order in ship_orders:
-            # product_id в ManufacturingOrder - это String, нужно конвертировать в UUID
             product_id_str = str(order.product_id)
             
             if product_id_str not in product_map:
-                # Пытаемся найти продукт по UUID или строке
-                product_uuid = None
-                product = None
-                
                 try:
                     product_uuid = UUID(product_id_str) if product_id_str else None
-                    if product_uuid:
-                        product = self.db.query(Product).filter(
-                            Product.id == product_uuid
-                        ).first()
+                    product = self.db.query(Product).filter(Product.id == product_uuid).first() if product_uuid else None
                 except (ValueError, AttributeError):
-                    # Если не удалось конвертировать в UUID, пытаемся найти продукт по коду
-                    pass
-                
-                # Если продукт не найден, пропускаем этот заказ (или используем значения по умолчанию)
+                    product = None
                 if not product:
-                    # Для MVP: пропускаем заказы с невалидными product_id
                     continue
-                
                 product_map[product_id_str] = {
-                    "product_id": product.id,  # Всегда UUID из модели Product
+                    "product_id": product.id,
                     "product_code": product.product_code,
                     "product_name": product.product_name,
                     "total_quantity": 0,
-                    "priority": None,
+                    "qty_by_priority": {p: 0.0 for p in priority_levels},
+                    "earliest_due_by_priority": {p: None for p in priority_levels},
+                    "order_count_by_priority": {p: 0 for p in priority_levels},
                     "earliest_due_date": None,
                     "latest_due_date": None,
                     "source_orders": [],
-                    "order_count": 0
+                    "order_count": 0,
                 }
             
             product_data = product_map[product_id_str]
-            product_data["total_quantity"] += float(order.quantity)
+            qty = float(order.quantity)
+            product_data["total_quantity"] += qty
             product_data["source_orders"].append(order.id)
             product_data["order_count"] += 1
             
-            # Отслеживаем самую раннюю и самую позднюю дату выполнения
             if product_data["earliest_due_date"] is None or order.due_date < product_data["earliest_due_date"]:
                 product_data["earliest_due_date"] = order.due_date
-            
             if product_data["latest_due_date"] is None or order.due_date > product_data["latest_due_date"]:
                 product_data["latest_due_date"] = order.due_date
             
-            # Рассчитываем приоритет на основе самой ранней даты выполнения
-            days_until_due = (order.due_date - datetime.utcnow()).days
-            order_priority = self._calculate_priority(days_until_due)
-            
-            # Используем наивысший приоритет (URGENT > HIGH > NORMAL > LOW)
-            if product_data["priority"] is None or self._priority_rank(order_priority) > self._priority_rank(product_data["priority"]):
-                product_data["priority"] = order_priority
+            due = order.due_date
+            if due.tzinfo is None:
+                due = due.replace(tzinfo=timezone.utc)
+            days_until_due = (due - now_utc).days
+            source_status = (getattr(order, "source_status", None) or "").strip()
+            is_in_work = "работе" in source_status.lower() or source_status == "В работе"
+            if is_in_work:
+                order_priority = self._calculate_priority_in_work(days_until_due)
+            else:
+                order_priority = self._calculate_priority(days_until_due)
+            product_data["qty_by_priority"][order_priority] = product_data["qty_by_priority"].get(order_priority, 0) + qty
+            if product_data["earliest_due_by_priority"][order_priority] is None or order.due_date < product_data["earliest_due_by_priority"][order_priority]:
+                product_data["earliest_due_by_priority"][order_priority] = order.due_date
+            product_data["order_count_by_priority"][order_priority] = product_data["order_count_by_priority"].get(order_priority, 0) + 1
         
-        # TODO: Добавить IN_WORK заказы при наличии мощностей (MVP: пропускаем проверку мощностей)
-        # Для MVP просто консолидируем SHIP заказы
-        
+        for product_data in product_map.values():
+            qty_by_priority = product_data.pop("qty_by_priority", {})
+            earliest_by = product_data.pop("earliest_due_by_priority", {})
+            order_count_by = product_data.pop("order_count_by_priority", {})
+            product_data["qty_urgent"] = float(qty_by_priority.get(OrderPriority.URGENT.value, 0) or 0)
+            product_data["qty_high"] = float(qty_by_priority.get(OrderPriority.HIGH.value, 0) or 0)
+            product_data["qty_normal"] = float(qty_by_priority.get(OrderPriority.NORMAL.value, 0) or 0)
+            product_data["qty_low"] = float(qty_by_priority.get(OrderPriority.LOW.value, 0) or 0)
+            product_data["earliest_due_date_urgent"] = earliest_by.get(OrderPriority.URGENT.value)
+            product_data["earliest_due_date_high"] = earliest_by.get(OrderPriority.HIGH.value)
+            product_data["earliest_due_date_normal"] = earliest_by.get(OrderPriority.NORMAL.value)
+            product_data["earliest_due_date_low"] = earliest_by.get(OrderPriority.LOW.value)
+            product_data["order_count_urgent"] = int(order_count_by.get(OrderPriority.URGENT.value, 0) or 0)
+            product_data["order_count_high"] = int(order_count_by.get(OrderPriority.HIGH.value, 0) or 0)
+            product_data["order_count_normal"] = int(order_count_by.get(OrderPriority.NORMAL.value, 0) or 0)
+            product_data["order_count_low"] = int(order_count_by.get(OrderPriority.LOW.value, 0) or 0)
+            best_level = OrderPriority.LOW.value
+            best_qty = 0.0
+            for level in (OrderPriority.URGENT.value, OrderPriority.HIGH.value, OrderPriority.NORMAL.value, OrderPriority.LOW.value):
+                q = qty_by_priority.get(level, 0) or 0
+                if q > best_qty:
+                    best_qty = q
+                    best_level = level
+            product_data["priority"] = best_level
+
         return list(product_map.values())
     
     def explode_bom(
@@ -375,7 +383,7 @@ class MRPService:
     # ========================================================================
     
     def _calculate_priority(self, days_until_due: int) -> str:
-        """Расчёт приоритета заказа на основе дней до выполнения."""
+        """Расчёт приоритета для статусов «Отгрузить» и «Образец»: по дням до отгрузки."""
         if days_until_due < 7:
             return OrderPriority.URGENT.value
         elif days_until_due < 14:
@@ -384,7 +392,13 @@ class MRPService:
             return OrderPriority.NORMAL.value
         else:
             return OrderPriority.LOW.value
-    
+
+    def _calculate_priority_in_work(self, days_until_due: int) -> str:
+        """Расчёт приоритета для статуса «В работе»: только NORMAL и LOW."""
+        if days_until_due < 30:
+            return OrderPriority.NORMAL.value
+        return OrderPriority.LOW.value
+
     def _priority_rank(self, priority: str) -> int:
         """Возвращает ранг приоритета (больше = более срочно)."""
         ranks = {

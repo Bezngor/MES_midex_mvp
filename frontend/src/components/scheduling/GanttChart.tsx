@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useScheduleStore } from '../../store/useScheduleStore';
-import { getWorkCenterDisplayName } from '../../utils/workCenterDisplayNames';
+import { getWorkCenterDisplayName, sortWorkCentersByOrder } from '../../utils/workCenterDisplayNames';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 
@@ -96,8 +96,8 @@ export const GanttChart: React.FC = () => {
             </div>
           </div>
 
-          {/* Рабочие центры и задачи */}
-          {ganttData.work_centers.map((wc) => (
+          {/* Рабочие центры и задачи (порядок фиксирован: Реактор → Миксер → Тубировка 1/2 → полуавтоматы → розлив → ЧЗ → Линия тубы) */}
+          {sortWorkCentersByOrder(ganttData.work_centers).map((wc) => (
             <div key={wc.id} className="mb-4 border-b pb-4">
               <div className="font-semibold mb-2 text-gray-800">{getWorkCenterDisplayName(wc.name, wc.id)}</div>
               <div className="relative h-20 bg-gray-50 rounded">

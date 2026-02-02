@@ -2,14 +2,28 @@
  * Компонент дашборда остатков на складе
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
+import { ProductType } from '../../services/types';
+
+/** Подпись статуса остатка: готов к выдаче (сырьё, масса, ГП) — не путать с типом продукта «ГП». */
+const INVENTORY_STATUS_FINISHED_LABEL = 'Готово к отпуску';
+
+/** Фильтр по типу продукта: Сырьё, Масса, Упаковка, ГП. */
+const PRODUCT_TYPE_FILTER_OPTIONS: { value: ProductType | ''; label: string }[] = [
+  { value: '', label: 'Все типы продукта' },
+  { value: ProductType.RAW_MATERIAL, label: 'Сырьё' },
+  { value: ProductType.BULK, label: 'Масса' },
+  { value: ProductType.PACKAGING, label: 'Упаковка' },
+  { value: ProductType.FINISHED_GOOD, label: 'Готовая продукция (ГП)' },
+];
 
 export const InventoryDashboard: React.FC = () => {
   const { inventory, loading, error, fetchInventory } = useInventoryStore();
   const [filter, setFilter] = useState<'FINISHED' | 'SEMI_FINISHED' | ''>('');
+  const [productTypeFilter, setProductTypeFilter] = useState<ProductType | ''>('');
 
   // Безопасное преобразование значения (string | number | null) в число
   const toNumber = (value: unknown): number => {
@@ -23,11 +37,17 @@ export const InventoryDashboard: React.FC = () => {
     fetchInventory(undefined, undefined, filter || undefined);
   }, [filter, fetchInventory]);
 
-  if (loading) return <Loading message="Загрузка остатков..." />;
-  if (error) return <Error message={error} onRetry={() => fetchInventory(undefined, undefined, filter || undefined)} />;
+  const safeInventory = Array.isArray(inventory) ? inventory : [];
+  const filteredInventory = useMemo(() => {
+    if (!productTypeFilter) return safeInventory;
+    return safeInventory.filter((item) => {
+      const pt = item?.product?.product_type;
+      return pt != null && String(pt) === String(productTypeFilter);
+    });
+  }, [safeInventory, productTypeFilter]);
 
-  const totalQuantity = inventory.reduce((sum, item) => sum + toNumber(item.quantity), 0);
-  const totalAvailable = inventory.reduce((sum, item) => {
+  const totalQuantity = filteredInventory.reduce((sum, item) => sum + toNumber(item.quantity), 0);
+  const totalAvailable = filteredInventory.reduce((sum, item) => {
     const rawAvailable =
       item.available_quantity !== undefined && item.available_quantity !== null
         ? item.available_quantity
@@ -35,22 +55,39 @@ export const InventoryDashboard: React.FC = () => {
     const availableQty = toNumber(rawAvailable);
     return sum + availableQty;
   }, 0);
-  const totalReserved = inventory.reduce((sum, item) => sum + toNumber(item.reserved_quantity), 0);
+  const totalReserved = filteredInventory.reduce((sum, item) => sum + toNumber(item.reserved_quantity), 0);
+
+  if (loading) return <Loading message="Загрузка остатков..." />;
+  if (error) return <Error message={error} onRetry={() => fetchInventory(undefined, undefined, filter || undefined)} />;
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
         <h2 className="text-2xl font-bold text-gray-800">Остатки на складе</h2>
-        <select
-          className="border rounded px-3 py-2"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as 'FINISHED' | 'SEMI_FINISHED' | '')}
-          title="Фильтр по типу остатка: готовый к отгрузке или полуфабрикат"
-        >
-          <option value="">Все типы остатка</option>
-          <option value="FINISHED">Готовая продукция (к отгрузке)</option>
-          <option value="SEMI_FINISHED">Полуфабрикаты</option>
-        </select>
+        <div className="flex flex-wrap gap-2">
+          <select
+            className="border rounded px-3 py-2"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as 'FINISHED' | 'SEMI_FINISHED' | '')}
+            title="Фильтр по типу остатка: готово к отпуску или полуфабрикат"
+          >
+            <option value="">Все типы остатка</option>
+            <option value="FINISHED">{INVENTORY_STATUS_FINISHED_LABEL}</option>
+            <option value="SEMI_FINISHED">Полуфабрикаты</option>
+          </select>
+          <select
+            className="border rounded px-3 py-2"
+            value={productTypeFilter}
+            onChange={(e) => setProductTypeFilter(e.target.value as ProductType | '')}
+            title="Фильтр по типу продукта: Сырьё, Масса, Упаковка, ГП"
+          >
+            {PRODUCT_TYPE_FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value || 'all'} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Статистика */}
@@ -98,14 +135,14 @@ export const InventoryDashboard: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {inventory.length === 0 ? (
+            {filteredInventory.length === 0 ? (
               <tr>
                 <td colSpan={6} className="border border-gray-300 p-4 text-center text-gray-500">
                   Остатки не найдены
                 </td>
               </tr>
             ) : (
-              inventory.map((item) => {
+              filteredInventory.map((item) => {
                 // Вычисляем available_quantity если оно не пришло с сервера
                 const quantity = toNumber(item.quantity);
                 const reserved = toNumber(item.reserved_quantity);
@@ -130,8 +167,8 @@ export const InventoryDashboard: React.FC = () => {
                     <td className="border border-gray-300 p-2">
                       <span className={`px-2 py-1 rounded text-xs ${
                         item.product_status === 'FINISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`} title={item.product_status === 'FINISHED' ? 'Готовая продукция (к отгрузке)' : 'Полуфабрикат'}>
-                        {item.product_status === 'FINISHED' ? 'Готовая продукция' : 'Полуфабрикат'}
+                      }`} title={item.product_status === 'FINISHED' ? INVENTORY_STATUS_FINISHED_LABEL : 'Полуфабрикат'}>
+                        {item.product_status === 'FINISHED' ? INVENTORY_STATUS_FINISHED_LABEL : 'Полуфабрикат'}
                       </span>
                     </td>
                     <td className="border border-gray-300 p-2 text-gray-900">

@@ -4,13 +4,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { useProductStore } from '../../store/useProductStore';
-import { ProductType } from '../../services/types';
+import { ProductType, Product } from '../../services/types';
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 import { Button } from '../common/Button';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 
-export const ProductList: React.FC = () => {
+interface ProductListProps {
+  onEdit?: (product: Product) => void;
+}
+
+export const ProductList: React.FC<ProductListProps> = ({ onEdit }) => {
   const { products, loading, error, fetchProducts, deleteProduct } = useProductStore();
   const [filter, setFilter] = useState<ProductType | ''>('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -70,13 +74,24 @@ export const ProductList: React.FC = () => {
                   <td className="border border-gray-300 p-2 text-gray-900">{product.product_type}</td>
                   <td className="border border-gray-300 p-2 text-gray-900">{product.unit_of_measure}</td>
                   <td className="border border-gray-300 p-2">
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setDeleteConfirm({ id: product.id, name: product.product_name })}
-                    >
-                      Удалить
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      {onEdit && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => onEdit(product)}
+                        >
+                          Редактировать
+                        </Button>
+                      )}
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setDeleteConfirm({ id: product.id, name: product.product_name })}
+                      >
+                        Удалить
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -88,7 +103,11 @@ export const ProductList: React.FC = () => {
       <ConfirmDialog
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
-        onConfirm={() => deleteConfirm && deleteProduct(deleteConfirm.id)}
+        onConfirm={async () => {
+          const id = deleteConfirm?.id;
+          setDeleteConfirm(null);
+          if (id) await deleteProduct(id);
+        }}
         title="Подтверждение удаления"
         message={deleteConfirm ? `Удалить продукт «${deleteConfirm.name}»? Это действие нельзя отменить.` : ''}
         confirmLabel="Удалить"

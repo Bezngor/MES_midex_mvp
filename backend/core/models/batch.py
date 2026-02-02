@@ -47,6 +47,11 @@ class Batch(Base):
     planned_start: Mapped[datetime | None] = Column(DateTime(timezone=True), nullable=True)
     started_at: Mapped[datetime | None] = Column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = Column(DateTime(timezone=True), nullable=True)
+    posted_to_inventory_at: Mapped[datetime | None] = Column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Время учёта партии в остатках; null — ещё не учтено.",
+    )
 
     storage_location_id: Mapped[uuid.UUID | None] = Column(UUID(as_uuid=True), nullable=True)
     parent_order_id: Mapped[uuid.UUID | None] = Column(

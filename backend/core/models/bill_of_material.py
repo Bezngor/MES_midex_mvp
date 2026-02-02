@@ -41,7 +41,7 @@ class BillOfMaterial(Base):
         nullable=False,
         index=True,
     )
-    quantity: Mapped[float] = Column(Numeric(10, 4), nullable=False)
+    quantity: Mapped[float] = Column(Numeric(18, 14), nullable=False)
     unit: Mapped[str] = Column(String(20), nullable=False)
     sequence: Mapped[int | None] = Column(Integer, nullable=True)
 

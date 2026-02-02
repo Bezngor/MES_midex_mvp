@@ -16,6 +16,7 @@ interface ScheduleStore {
   fetchGanttData: (startDate: string, endDate: string) => Promise<void>;
   fetchWorkCenterLoad: (workCenterId: string, date: string) => Promise<ApiResponse<WorkCenterLoad> | null>;
   releaseOrder: (orderId: string, releaseDate?: string) => Promise<ApiResponse<{ order: ManufacturingOrder; tasks_created: number }> | null>;
+  cancelRelease: (orderId: string) => Promise<ApiResponse<{ order: ManufacturingOrder }> | null>;
   dispatchTask: (taskId: string, workCenterId: string, scheduledStart: string) => Promise<ApiResponse<Task> | null>;
   fetchTasks: (params?: { status?: string; work_center_id?: string; order_id?: string }) => Promise<void>;
 }
@@ -75,7 +76,6 @@ export const useScheduleStore = create<ScheduleStore>((set, get) => ({
     try {
       const response = await dispatchingAPI.releaseOrder(orderId, releaseDate);
       if (response.success) {
-        // Обновляем расписание
         await get().fetchSchedule();
         return response;
       } else {
@@ -84,6 +84,23 @@ export const useScheduleStore = create<ScheduleStore>((set, get) => ({
       }
     } catch (error: any) {
       set({ error: error.message || 'Ошибка выпуска заказа' });
+      return null;
+    }
+  },
+
+  cancelRelease: async (orderId) => {
+    set({ error: null });
+    try {
+      const response = await dispatchingAPI.cancelRelease(orderId);
+      if (response.success) {
+        await get().fetchSchedule();
+        return response;
+      } else {
+        set({ error: response.error || 'Ошибка отмены выпуска' });
+        return null;
+      }
+    } catch (error: any) {
+      set({ error: error.message || 'Ошибка отмены выпуска' });
       return null;
     }
   },

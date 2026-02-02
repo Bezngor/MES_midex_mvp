@@ -27,6 +27,7 @@ class ManufacturingOrder(Base):
     # Расширения для process manufacturing
     order_type = Column(String(50), nullable=False, default="CUSTOMER", index=True)
     priority = Column(String(50), nullable=True, index=True)
+    source_status = Column(String(50), nullable=True, index=True)
     parent_order_id = Column(UUID(as_uuid=True), ForeignKey("manufacturing_orders.id"), nullable=True, index=True)
     source_order_ids = Column(JSONB, nullable=True)
     is_consolidated = Column(Boolean, nullable=False, default=False)
@@ -50,6 +51,7 @@ class ManufacturingOrder(Base):
         Index("idx_manufacturing_orders_due_date", "due_date"),
         Index("idx_orders_type", "order_type"),
         Index("idx_orders_priority", "priority"),
+        Index("idx_orders_source_status", "source_status"),
         Index("idx_orders_parent", "parent_order_id"),
     )
 

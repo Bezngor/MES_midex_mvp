@@ -2,9 +2,9 @@
 DSIZ Planning API Schemas.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Dict, Optional
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 
@@ -25,6 +25,15 @@ class DsizPlanningRequest(BaseModel):
         default_factory=dict,
         description="Состояние персонала по сменам: {'2026-01-27': {'OPERATOR': 5, 'PACKER': 2}}"
     )
+
+    @field_validator("planning_date")
+    @classmethod
+    def planning_date_not_in_past(cls, v: date) -> date:
+        """Дата начала планирования не может быть в прошлом."""
+        today_utc = datetime.now(timezone.utc).date()
+        if v < today_utc:
+            raise ValueError("Дата начала планирования не может быть в прошлом")
+        return v
 
 
 class PlanningOperation(BaseModel):

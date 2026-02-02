@@ -56,7 +56,8 @@ export interface Product {
 }
 
 export interface ProductCreate {
-  product_code: string;
+  /** Если не указан — генерируется на бэкенде автоматически. */
+  product_code?: string;
   product_name: string;
   product_type: ProductType;
   unit_of_measure: string;
@@ -91,9 +92,13 @@ export interface Batch {
   quantity_kg: number;
   status: BatchStatus;
   work_center_id?: string;
+  operator_id?: string | null;
+  planned_start?: string | null;
   parent_order_id?: string;
   started_at?: string;
   completed_at?: string;
+  /** Время учёта партии в остатках; null — ещё не учтено. */
+  posted_to_inventory_at?: string | null;
   product?: Product;
   created_at: string;
   updated_at?: string;
@@ -102,8 +107,22 @@ export interface Batch {
 export interface BatchCreate {
   product_id: string;
   quantity_kg: number;
+  status?: BatchStatus;
   work_center_id?: string;
+  operator_id?: string;
+  planned_start?: string;
   parent_order_id?: string;
+}
+
+/** Частичное обновление батча (корректировка): количество, статус, оператор, времена, рабочий центр. */
+export interface BatchUpdate {
+  quantity_kg?: number;
+  status?: BatchStatus;
+  work_center_id?: string | null;
+  operator_id?: string | null;
+  planned_start?: string | null;
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface InventoryBalance {
@@ -187,6 +206,9 @@ export interface ManufacturingOrder {
   id: string;
   order_number: string;
   product_id: string;
+  /** Наименование ГП (из API, для отображения в UI). */
+  product_name?: string | null;
+  product_code?: string | null;
   quantity: number;
   status: OrderStatus;
   order_type?: 'CUSTOMER' | 'INTERNAL_BULK';
@@ -199,14 +221,33 @@ export interface ManufacturingOrder {
 
 export interface MRPConsolidation {
   product_id: string;
+  product_code?: string;
+  product_name?: string;
   total_quantity: number;
   priority: string;
+  qty_urgent?: number;
+  qty_high?: number;
+  qty_normal?: number;
+  qty_low?: number;
+  /** Крайний срок по уровню (для расчёта по выбранным колонкам) */
+  earliest_due_date_urgent?: string | null;
+  earliest_due_date_high?: string | null;
+  earliest_due_date_normal?: string | null;
+  earliest_due_date_low?: string | null;
+  order_count_urgent?: number;
+  order_count_high?: number;
+  order_count_normal?: number;
+  order_count_low?: number;
   earliest_due_date: string;
   source_orders: string[];
 }
 
+/** Ответ API explode-bom: требования по product_id → количество */
 export interface MRPExplosion {
-  requirements: Record<string, { quantity: number; unit: string }>;
+  product_id: string;
+  quantity: number;
+  requirements: Record<string, number>;
+  total_components: number;
 }
 
 export interface NetRequirement {

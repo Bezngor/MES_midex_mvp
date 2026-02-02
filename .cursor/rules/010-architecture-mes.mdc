@@ -37,6 +37,10 @@ alwaysApply: true
   - One main responsibility per file.
   - Shared logic in `services/`, not inside routes or components.
 
+# Commits and Plan Execution
+
+- **ОБЯЗАТЕЛЬНО** проводить коммит после каждого успешного выполнения пункта или подпункта тактического плана (Phase plan, TACTICAL_PLAN и т.п.). Фиксировать в репозитории завершённые задачи, чтобы не терять прогресс и сохранять воспроизводимость.
+
 # Process for New Features
 
 When implementing a new feature (entity, module, workflow):

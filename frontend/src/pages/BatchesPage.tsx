@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { BatchList } from '../components/batches/BatchList';
 import { useBatchStore } from '../store/useBatchStore';
-import { BatchCreate } from '../services/types';
+import { BatchCreate, BatchStatus } from '../services/types';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { useProductStore } from '../store/useProductStore';
@@ -17,24 +17,61 @@ export const BatchesPage: React.FC = () => {
   React.useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<BatchCreate>({
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const initialFormData: BatchCreate = {
     product_id: '',
     quantity_kg: 0,
-  });
+    status: BatchStatus.PLANNED,
+    operator_id: '',
+    planned_start: '',
+  };
+  const [formData, setFormData] = useState<BatchCreate>(initialFormData);
+
+  const bulkProducts = products.filter((p) => p.product_type === 'BULK');
+  const selectedProduct = formData.product_id
+    ? bulkProducts.find((p) => p.id === formData.product_id)
+    : null;
+  const minBatchKg = selectedProduct?.min_batch_size_kg;
+  const quantityError =
+    minBatchKg != null && formData.quantity_kg < minBatchKg
+      ? `Количество не может быть меньше минимального размера партии (${minBatchKg} кг)`
+      : null;
+
+  const handleProductChange = (productId: string) => {
+    const product = bulkProducts.find((p) => p.id === productId);
+    const defaultQty = product?.min_batch_size_kg ?? 1;
+    setFormData((prev) => ({
+      ...prev,
+      product_id: productId,
+      quantity_kg: defaultQty,
+    }));
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (quantityError) return;
     setIsSubmitting(true);
     setError(null);
 
+    const payload: BatchCreate = {
+      product_id: formData.product_id,
+      quantity_kg: formData.quantity_kg,
+      status: formData.status,
+      operator_id: formData.operator_id?.trim() || undefined,
+      planned_start: formData.planned_start ? new Date(formData.planned_start).toISOString() : undefined,
+    };
     try {
-      const response = await createBatch(formData);
+      const response = await createBatch(payload);
       if (response?.success) {
         setIsFormOpen(false);
-        setFormData({ product_id: '', quantity_kg: 0 });
+        setFormData(initialFormData);
+        setSuccessMessage('Партия успешно создана');
+        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         setError(response?.error || 'Ошибка создания батча');
       }
@@ -44,8 +81,6 @@ export const BatchesPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
-  const bulkProducts = products.filter((p) => p.product_type === 'BULK');
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -59,6 +94,11 @@ export const BatchesPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-md" role="status">
+            {successMessage}
+          </div>
+        )}
         <BatchList />
       </main>
 
@@ -76,7 +116,7 @@ export const BatchesPage: React.FC = () => {
             <select
               className="w-full border rounded px-2 py-1"
               value={formData.product_id}
-              onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
+              onChange={(e) => handleProductChange(e.target.value)}
               required
             >
               <option value="">Выберите продукт</option>
@@ -89,19 +129,65 @@ export const BatchesPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Количество (кг) *</label>
+            <label className="block text-sm font-medium mb-1">
+              Количество (кг) *
+              {minBatchKg != null && (
+                <span className="text-gray-500 font-normal ml-1">мин. {minBatchKg} кг</span>
+              )}
+            </label>
             <input
               type="number"
               step="0.01"
-              className="w-full border rounded px-2 py-1"
+              className={`w-full border rounded px-2 py-1 ${quantityError ? 'border-red-500' : ''}`}
               value={formData.quantity_kg}
               onChange={(e) => setFormData({ ...formData, quantity_kg: Number(e.target.value) })}
               required
-              min="0"
+              min={minBatchKg ?? 0}
+            />
+            {quantityError && (
+              <p className="text-red-600 text-sm mt-1" role="alert">
+                {quantityError}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Статус</label>
+            <select
+              className="w-full border rounded px-2 py-1"
+              value={formData.status ?? BatchStatus.PLANNED}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as BatchStatus })}
+            >
+              {Object.values(BatchStatus).map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Оператор</label>
+            <input
+              type="text"
+              className="w-full border rounded px-2 py-1"
+              value={formData.operator_id ?? ''}
+              onChange={(e) => setFormData({ ...formData, operator_id: e.target.value })}
+              placeholder="Идентификатор оператора"
             />
           </div>
 
-          <Button type="submit" isLoading={isSubmitting}>
+          <div>
+            <label className="block text-sm font-medium mb-1">Плановое время старта</label>
+            <input
+              type="datetime-local"
+              className="w-full border rounded px-2 py-1"
+              value={formData.planned_start ?? ''}
+              onChange={(e) => setFormData({ ...formData, planned_start: e.target.value })}
+            />
+          </div>
+
+          <Button type="submit" isLoading={isSubmitting} disabled={!!quantityError}>
             Создать батч
           </Button>
         </form>

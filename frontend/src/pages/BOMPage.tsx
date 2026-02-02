@@ -1,5 +1,6 @@
 /**
  * Страница управления спецификациями (BOM)
+ * Выбор продукта: сначала категория (ГП или Масса), затем список без сырья.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -7,14 +8,31 @@ import { useProductStore } from '../store/useProductStore';
 import { BOMTree } from '../components/bom/BOMTree';
 import { BOMEditor } from '../components/bom/BOMEditor';
 import { Loading } from '../components/common/Loading';
+import { ProductType } from '../services/types';
+
+/** Категория продукта для редактирования BOM: только ГП или Масса (сырьё не участвует). */
+const BOM_PARENT_CATEGORIES = [
+  { value: ProductType.FINISHED_GOOD, label: 'Готовая продукция (ГП)' },
+  { value: ProductType.BULK, label: 'Масса' },
+] as const;
 
 export const BOMPage: React.FC = () => {
   const { products, loading, fetchProducts } = useProductStore();
+  const [category, setCategory] = useState<ProductType.FINISHED_GOOD | ProductType.BULK | ''>('');
   const [selectedProductId, setSelectedProductId] = useState<string>('');
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  const productsInCategory = category
+    ? products.filter((p) => p.product_type === category)
+    : [];
+
+  const onCategoryChange = (newCategory: string) => {
+    setCategory(newCategory as ProductType.FINISHED_GOOD | ProductType.BULK | '');
+    setSelectedProductId('');
+  };
 
   if (loading) return <Loading message="Загрузка продуктов..." />;
 
@@ -27,20 +45,37 @@ export const BOMPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
-        <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Выберите продукт для редактирования спецификации:</label>
+        <div className="mb-4 space-y-2">
+          <label className="block text-sm font-medium">Выберите категорию продукта для редактирования спецификации:</label>
           <select
             className="w-full max-w-md border rounded px-3 py-2"
-            value={selectedProductId}
-            onChange={(e) => setSelectedProductId(e.target.value)}
+            value={category}
+            onChange={(e) => onCategoryChange(e.target.value)}
           >
-            <option value="">Выберите продукт</option>
-            {products.map((product) => (
-              <option key={product.id} value={product.id}>
-                {product.product_code} - {product.product_name}
+            <option value="">Выберите категорию</option>
+            {BOM_PARENT_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
               </option>
             ))}
           </select>
+          {category && (
+            <>
+              <label className="block text-sm font-medium">Продукт:</label>
+              <select
+                className="w-full max-w-md border rounded px-3 py-2"
+                value={selectedProductId}
+                onChange={(e) => setSelectedProductId(e.target.value)}
+              >
+                <option value="">Выберите продукт</option>
+                {productsInCategory.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.product_code} - {product.product_name}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
         </div>
 
         {selectedProductId && (

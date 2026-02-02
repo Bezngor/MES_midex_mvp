@@ -23,6 +23,8 @@ services:
     container_name: mes_backend
     environment:
       DATABASE_URL: postgresql://mes_user:mes_password@postgres:5432/mes_db
+      CORS_ORIGINS: "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+      ENVIRONMENT: development
     ports:
       - "8000:8000"
     depends_on:

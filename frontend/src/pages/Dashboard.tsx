@@ -48,7 +48,7 @@ export const Dashboard: React.FC = () => {
             className="bg-yellow-500 text-white p-6 rounded-lg shadow-md hover:bg-yellow-600 transition-colors"
           >
             <h2 className="text-xl font-semibold mb-2">Остатки</h2>
-            <p className="text-yellow-100">Мониторинг остатков на складе (FINISHED/SEMI_FINISHED)</p>
+            <p className="text-yellow-100">Мониторинг остатков на складе (готово к отпуску / полуфабрикат)</p>
           </Link>
 
           <Link

@@ -25,10 +25,15 @@ class BOMCreate(BaseModel):
     )
 
 
-class BOMResponse(BOMCreate):
-    """Схема чтения строки спецификации."""
+class BOMResponse(BaseModel):
+    """Схема чтения строки спецификации. quantity допускает 0 (данные из БД)."""
 
     id: UUID
+    parent_product_id: UUID
+    child_product_id: UUID
+    quantity: Decimal = Field(..., ge=0, description="Количество компонента (0 допустимо в БД).")
+    unit: str = Field(..., max_length=20)
+    sequence: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 

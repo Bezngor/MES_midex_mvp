@@ -1,0 +1,178 @@
+﻿product_id;product_code;product_name;product_type;unit_of_measure;location;quantity;product_status;reserved_quantity
+75591429-8b3a-4287-9995-4a988a2cfe4d;BULK_Масса_GECO_Жидкое_мыло;Масса GECO Жидкое мыло;BULK;kg;CUB_1;100;FINISHED;
+b737717d-2042-4a49-aa83-fd56674bbaf6;BULK_Масса_GECO_Жидкое_мыло_антибактериальное_без_цвета_и_запаха;Масса GECO Жидкое мыло антибактериальное без цвета и запаха;BULK;kg;CUB_2;1888;FINISHED;500
+fea9752f-04e2-44be-9174-12c85dad2258;BULK_Масса_GECO_Крем_гель_для_очистки;Масса GECO Крем-гель для очистки;BULK;kg;CUB_3;1463;FINISHED;
+d0f9af0b-da31-4cf5-871f-43ad0cf8312c;BULK_Масса_GECO_Крем_мороз;Масса GECO Крем мороз;BULK;kg;CUB_4;1419;FINISHED;250
+425b14ae-a796-45ac-bd39-94bfbba5c2f6;BULK_Масса_GECO_Крем_УФ;Масса GECO Крем УФ;BULK;kg;CUB_5;447;FINISHED;
+3f268898-fe09-4dc7-8ac6-b9a28bd1e145;BULK_Масса_GECO_Крем_УФМороз;Масса GECO Крем УФ+Мороз;BULK;kg;CUB_6;828;FINISHED;400
+9b7ae0fc-51f3-49d3-baab-1776381ed989;BULK_Масса_GECO_Паста_от_красителей;Масса GECO Паста от красителей;BULK;kg;TANK_1;726;FINISHED;700
+3c69e86b-161c-4cd4-9a21-72f136dc59f1;BULK_Масса_GECO_Спрей_защитный_от_клещей_3в1;Масса GECO Спрей защитный от клещей 3в1;BULK;kg;CUB_8;1979;FINISHED;1000
+69037db0-a116-4a4c-b7d3-475bc49faae3;BULK_Масса_GECO_Спрей_от_пота_антибактериальный;Масса GECO Спрей от пота антибактериальный;BULK;kg;CUB_9;1217;FINISHED;500
+efdbc76f-237b-48a2-9023-ad85463c6408;BULK_Масса_СЕВЕРЯНИН_Крем_гидрофильный;Масса СЕВЕРЯНИН Крем гидрофильный;BULK;kg;CUB_10;1615;FINISHED;
+dece8437-f928-4aae-b227-1e0f8d9e3fa9;BULK_Масса_СЕВЕРЯНИН_Крем_гидрофобный;Масса СЕВЕРЯНИН Крем гидрофобный;BULK;kg;CUB_11;1979;FINISHED;
+761d100a-f1db-4b12-b7c4-b81eafd8a356;BULK_Масса_СЕВЕРЯНИН_Крем_регенерирующий;Масса СЕВЕРЯНИН Крем регенерирующий;BULK;kg;CUB_12;1509;FINISHED;
+9caea642-10e6-41d5-a2bd-70b3b3f28dd3;BULK_Масса_СЕВЕРЯНИН_Крем_универсальный;Масса СЕВЕРЯНИН Крем универсальный;BULK;kg;CUB_13;1462;FINISHED;
+b66bda72-43a6-4859-837e-3a856edab382;BULK_Масса_СЕВЕРЯНИН_Паста;Масса СЕВЕРЯНИН Паста;BULK;kg;TANK_2;1401;FINISHED;400
+d8555fae-4d34-4ac8-aabf-d559a15bcd83;00-000937;GECO Крем_гель для очистки рук тела и волос, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;588;FINISHED;
+a2b7aa69-a575-4ae8-b76b-e4f519abe8ad;00-000773;GECO Крем гидрофильный СП, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;863;FINISHED;
+01ff68a6-56d1-4ad1-b1bf-b10d5e242809;00-001586;GECO Крем гидрофильный СП, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;1888;FINISHED;
+94048f1c-b983-41ab-ba16-304cf45e4ee4;00-000967;GECO Крем гидрофобный СП, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;326;FINISHED;
+7e1497ab-3a76-42df-9ebc-b80b9120d237;00-000772;GECO Крем гидрофобный СП, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;1607;FINISHED;450
+bd1f3ef8-18b2-4bd8-aedb-540bd2e6afed;00-001259;GECO Крем гидрофобный СП, 1 л, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;139;FINISHED;
+cc2e63e9-c6da-44dc-a027-eadf59eee9b8;00-001587;GECO Крем гидрофобный СП, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;747;FINISHED;
+671bc2b9-ff7f-48a8-9b64-5a5287ce692a;00-000631;GECO Крем мороз, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;0;FINISHED;
+ba10a0a4-c904-425f-adae-4f008d903f68;00-000630;GECO Крем мороз, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;822;FINISHED;
+c102d7e8-a2b4-47f6-869b-74efe34a9f94;00-000771;GECO Крем регенерирующий СП, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;1499;FINISHED;
+469fcaec-7282-4401-baae-3d081c695e22;00-000936;GECO Крем регенерирующий СП, 200 мл, Экст, Винт;FINISHED_GOOD;pcs;WH_FG;1792;FINISHED;1000
+0716e0b1-eeae-4a51-b5f7-3ac683b69b74;00-001419;GECO Крем регенерирующий СП, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;1134;FINISHED;
+cca4d501-ade8-4c34-a258-782cdd8c2e51;00-000970;GECO Крем универсальный СП, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;1627;FINISHED;540
+39753cc0-7d51-4e84-abc8-c824c74f6c61;00-001190;GECO Крем универсальный СП, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;855;FINISHED;
+c539a16b-7270-478f-989f-7170d672031c;00-001417;GECO Крем универсальный СП, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;810;FINISHED;
+92e51324-7391-44b8-89b7-767ae2d58640;00-000634;GECO Крем УФ, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;492;FINISHED;
+996524fd-ea9c-4892-8de8-de993f188cc3;00-000635;GECO Крем УФ, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;417;FINISHED;
+7e02dffc-7d02-45ce-b93a-142c43cd454f;00-001686;GECO Крем УФ, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;0;FINISHED;
+c5b6eb5f-b74c-4752-b9d6-e9214e1567bd;00-000838;GECO Крем УФ+мороз, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;998;FINISHED;
+20a519bc-a1f0-4fec-b1e8-7003147bd252;00-000839;GECO Крем УФ+мороз, 100 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;289;FINISHED;
+07428f5e-0567-474d-91d8-d88862bd808e;00-000515;GECO Мыло жидкое, 1 л, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;1352;FINISHED;
+a9779e6d-91bf-4f1a-9105-7a8fea562720;00-001170;GECO Мыло жидкое, 250 мл, Флакон, Диск-топ;FINISHED_GOOD;pcs;WH_FG;1309;FINISHED;300
+508da583-82a6-4531-a134-b9a4a88a0b70;00-001233;GECO Мыло жидкое, 250 мл, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;1037;FINISHED;
+6befe797-f1e8-4af6-b3a1-972f19833c01;00-001564;GECO Мыло жидкое, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;1971;FINISHED;
+39e0c046-530e-461c-9c66-7ef89de0485f;00-000522;GECO Мыло жидкое, 300 мл, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;1901;FINISHED;
+18d789e9-5e4b-47ea-ba35-f83146e11192;00-000493;GECO Мыло жидкое, 5 л, Канистра, Крышка;FINISHED_GOOD;pcs;WH_FG;108;FINISHED;
+ec6c6889-e34e-4d43-a52d-74fc50dfdf5c;00-001569;GECO Мыло жидкое АНТИБАКТЕР., 250 мл, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;1077;FINISHED;
+ff38aa51-0c58-4e6c-9be1-63f8f6824874;00-001268;GECO Паста для очистки от красителей, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;1144;FINISHED;
+25f2a5dc-b259-44fc-9d70-ce5becf86ff1;00-000777;GECO Паста для очистки СП, 100 мл, Лам, Винт;FINISHED_GOOD;pcs;WH_FG;201;FINISHED;
+4a6a3be2-2314-442b-98e3-6a23259c9df4;00-001630;GECO Паста для очистки СП, 1 л, Флакон, Дозатор;FINISHED_GOOD;pcs;WH_FG;1574;FINISHED;1500
+ab43b313-ee25-49c2-b5d4-832e5b769f8a;00-000648;GECO Паста для очистки СП, 200 мл, Экст, Винт;FINISHED_GOOD;pcs;WH_FG;1621;FINISHED;
+a7f06fa3-211d-4bf1-a904-8713bd770f42;00-001418;GECO Паста для очистки СП, 2 л, Картридж, Крышка;FINISHED_GOOD;pcs;WH_FG;0;FINISHED;
+c8c06a0e-1dfb-4ca7-9647-733850b1a10a;00-001366;GECO Паста для очистки СП д50, 200 мл, Лам, ФТ;FINISHED_GOOD;pcs;WH_FG;448;FINISHED;
+048e7699-f2e1-4577-8af2-f84c1d20cc64;00-001425;GECO Спрей от насекомых 3в1, 100 мл, Флакон, Распылитель;FINISHED_GOOD;pcs;WH_FG;565;FINISHED;
+ded4f94b-5972-4004-ad5d-9c83e6d3b96e;00-001401;GECO Спрей от насекомых 3в1, 200 мл, Флакон, Распылитель;FINISHED_GOOD;pcs;WH_FG;1285;FINISHED;600
+00ef5386-1e80-416f-b190-83d191323957;00-001645;GECO Спрей от пота АНТИБАКТЕР., 100 мл, Флакон, Распылитель;FINISHED_GOOD;pcs;WH_FG;700;FINISHED;
+4e4f5123-989c-4b39-be2f-7a81b9ea9812;00-001687;GECO Спрей от пота АНТИБАКТЕР., 200 мл, Флакон, Распылитель;FINISHED_GOOD;pcs;WH_FG;1329;FINISHED;
+cd6f4c6c-53b5-44f3-a9e4-de6853bc666e;00-000939;СЕВЕРЯНИН Паста для очистки комби, 200 мл, Экст, Винт;FINISHED_GOOD;pcs;WH_FG;1749;FINISHED;
+43a77902-26ad-42e6-bf59-b8707be4e3dc;00-001413;СЕВЕРЯНИН Паста для очистки с ПВХ, 200 мл, Экст, Винт;FINISHED_GOOD;pcs;WH_FG;1984;FINISHED;1500
+a1170b96-5a78-455c-9562-d0c0ec71a631;PKG_Гофроящик_10_360216155_250Д;Гофроящик № 10 360*216*155, 250Д;PACKAGING;pcs;WH_PC;415;FINISHED;
+eb7c8634-2101-433a-8556-87389314fad5;PKG_Гофроящик_12_для_1_л_ЧИСТЫЙ_290270235;Гофроящик № 12 для 1 л, ЧИСТЫЙ 290*270*235;PACKAGING;pcs;WH_PC;1190;FINISHED;
+c4955c58-857d-4049-9f70-ff52997c5b14;PKG_Гофроящик_1_д35_394196170_33;Гофроящик № 1 д35, 394*196*170 (3*3);PACKAGING;pcs;WH_PC;792;FINISHED;
+fc416c2c-f2c5-4bde-981e-70ddacae9607;PKG_Гофроящик_2_д40_394196215_32;Гофроящик № 2 д40, 394*196*215 (3*2);PACKAGING;pcs;WH_PC;742;FINISHED;
+0b14012b-7537-4f6a-86e3-7d062a433835;PKG_Гофроящик_3_д50_сп200_394196185_31;Гофроящик № 3 д50 сп200, 394*196*185 (3*1);PACKAGING;pcs;WH_PC;222;FINISHED;
+97dce67c-b3ec-48be-b7c0-60d7dc3d5c73;PKG_Гофроящик_3_ЧИСТЫЙ_д50_сп200_394196185_31;Гофроящик № 3 ЧИСТЫЙ д50 сп200, 394*196*185 (3*1);PACKAGING;pcs;WH_PC;1462;FINISHED;
+0b9efed3-bd2a-4fee-891b-ad046d4fb358;PKG_Гофроящик_4_ЧИСТЫЙ_сп100_394196143_31;Гофроящик № 4 ЧИСТЫЙ сп100, 394*196*143 (3*1);PACKAGING;pcs;WH_PC;839;FINISHED;
+85601bae-c004-4ee6-9fc8-e75efaf4eeee;PKG_Гофроящик_для_1_л_290270235;Гофроящик для 1 л, 290*270*235;PACKAGING;pcs;WH_PC;1050;FINISHED;200
+56bb25f0-66c9-4e7e-b70b-16af5c774098;PKG_Гофроящик_для_КАРТРИДЖЕЙ_2_л_320220250;Гофроящик для КАРТРИДЖЕЙ 2 л, 320*220*250;PACKAGING;pcs;WH_PC;1853;FINISHED;
+f06aaef6-a5fe-428c-ba1e-5986eff62db2;PKG_Гофроящик_для_мыла_520250200_34;Гофроящик для мыла, 520*250*200 (3*4);PACKAGING;pcs;WH_PC;1287;FINISHED;
+ab8c5e58-0b45-42f0-ae22-afd0ac926b3d;PKG_Дозатор_для_флакона_1_л_крем;Дозатор для флакона 1 л, крем;PACKAGING;pcs;WH_PC;1403;FINISHED;
+6f43989b-1e70-4a74-b748-b12b035df3a0;PKG_Дозатор_для_флакона_250_мл_крем;Дозатор для флакона 250 мл, крем;PACKAGING;pcs;WH_PC;890;FINISHED;
+06efa433-5c2c-48f6-b6cc-60a176fbf58d;PKG_Дозатор_для_флакона_500_мл_крем;Дозатор для флакона 500 мл, крем;PACKAGING;pcs;WH_PC;1588;FINISHED;400
+be2146e3-d2ac-4a11-823f-9030f3d91614;PKG_Дозатор_усиленный_28410_1R_82_длина_трубки_160мм_паста;Дозатор усиленный 28/410, 1R-82, длина трубки 160мм, паста;PACKAGING;pcs;WH_PC;1091;FINISHED;
+e85739c7-89a2-494c-bb48-c830a6b4ec6b;PKG_Канистра_горло_42мм_5_л;Канистра горло 42мм , 5 л;PACKAGING;pcs;WH_PC;287;FINISHED;
+e82910bf-7d85-42c4-a528-697242695c07;PKG_Картридж_с_крышкой_2_л;Картридж с крышкой, 2 л;PACKAGING;pcs;WH_PC;1364;FINISHED;800
+98b0ae30-9ad7-4ac6-b990-0801c0303294;PKG_Крышка_диск_топ_24410_100_250_мл;Крышка диск-топ, 24/410 (100 250 мл);PACKAGING;pcs;WH_PC;274;FINISHED;
+9a89a5bf-23a6-4d6e-97fd-e0a8ba113fe5;PKG_Крышка_для_канистры_5_л;Крышка для канистры 5 л,;PACKAGING;pcs;WH_PC;1617;FINISHED;
+333f0a8f-adb2-4cab-87bd-07a28cf200de;PKG_Распылитель_на_спрей_100_мл;Распылитель на спрей, 100 мл;PACKAGING;pcs;WH_PC;409;FINISHED;
+bef62bc1-b9ff-4679-8dd0-a6e4eedea90f;PKG_Распылитель_на_спрей_145_мл_200_мл;Распылитель на спрей, 145 мл 200 мл;PACKAGING;pcs;WH_PC;1673;FINISHED;
+47caeb3b-5bc1-4e74-9c83-bb3a11d3a73e;PKG_Туба_GECO_Крем_гидрофильный_100_мл_Лам_ФТ;Туба GECO Крем гидрофильный, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;140;FINISHED;
+dc6e656f-30dc-40cb-8090-fd38375f2f86;PKG_Туба_GECO_Крем_гидрофобный_100_мл_Лам_Винт;Туба GECO Крем гидрофобный, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;1089;FINISHED;410
+98f8658b-14c6-4017-97a1-dbd645a5d733;PKG_Туба_GECO_Крем_гидрофобный_100_мл_Лам_ФТ;Туба GECO Крем гидрофобный, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;812;FINISHED;
+51b41609-b4a3-476c-82ce-b7ab19000f84;PKG_Туба_GECO_Крем_мороз_100_мл_Лам_Винт;Туба GECO Крем мороз, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;228;FINISHED;
+80796ffe-34a2-42d4-961a-76151e2a1da2;PKG_Туба_GECO_Крем_мороз_100_мл_Лам_ФТ;Туба GECO Крем мороз, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;183;FINISHED;
+4165f1ef-fc3d-48a7-b0f8-6d053059234e;PKG_Туба_GECO_Крем_регенерирующий_100_мл_Лам_ФТ;Туба GECO Крем регенерирующий, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;1091;FINISHED;
+5fa29ada-591d-42f1-b6e8-7590117da38c;PKG_Туба_GECO_Крем_универсальный_100_мл_Лам_Винт;Туба GECO Крем универсальный, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;1302;FINISHED;700
+90073a6e-91bd-45f4-842f-e8382cd7131c;PKG_Туба_GECO_Крем_универсальный_100_мл_Лам_ФТ;Туба GECO Крем универсальный, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;265;FINISHED;
+0c46b388-3c55-4191-930e-7c2e23fc225d;PKG_Туба_GECO_Крем_УФ_100_мл_Лам_Винт;Туба GECO Крем УФ, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;1769;FINISHED;
+5dff896e-38c0-45fa-af94-d2324cbeeeff;PKG_Туба_GECO_Крем_УФ_100_мл_Лам_ФТ;Туба GECO Крем УФ, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;1828;FINISHED;
+2c4e8894-60ba-468d-af84-deee1fc160e6;PKG_Туба_GECO_Крем_УФмороз_100_мл_Лам_Винт;Туба GECO Крем УФ+мороз, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;638;FINISHED;
+49729136-de3c-4d45-bdbb-724f6be6a531;PKG_Туба_GECO_Крем_УФмороз_100_мл_Лам_ФТ;Туба GECO Крем УФ+мороз, 100 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;1682;FINISHED;
+d9a91461-cadc-40c5-ab43-7d05a5bdfcc2;PKG_Туба_GECO_Паста_для_очистки_100_мл_Лам_Винт;Туба GECO Паста для очистки, 100 мл, Лам, Винт;PACKAGING;pcs;WH_PC;1972;FINISHED;
+b8f31641-149b-4f81-b504-0141d585fa15;PKG_Туба_GECO_Паста_для_очистки_д40_200_мл_Экст_Винт;Туба GECO Паста для очистки, д40, 200 мл, Экст, Винт;PACKAGING;pcs;WH_PC;275;FINISHED;
+9ac4bc46-9395-47c6-937d-13469b0d4c77;PKG_Туба_GECO_Паста_для_очистки_д50_200_мл_Лам_ФТ;Туба GECO Паста для очистки, д50, 200 мл, Лам, ФТ;PACKAGING;pcs;WH_PC;1224;FINISHED;
+f1eabaa4-d4ba-4ed7-8b3c-3df48c7a935b;PKG_Туба_Без_накатки_250_мл_Экст_ФТ;Туба Без накатки, 250 мл, Экст, ФТ;PACKAGING;pcs;WH_PC;1418;FINISHED;550
+b187c10e-d2f4-42f9-ab74-e3e32b4f2ddf;PKG_Туба_СЕВЕРЯНИН_Паста_для_очистки_комби_д40_200_мл_Экст_Винт;Туба СЕВЕРЯНИН Паста для очистки комби, д40, 200 мл, Экст, Винт;PACKAGING;pcs;WH_PC;1127;FINISHED;
+e8d96903-c55c-439f-b4e1-d8740915f6cd;PKG_Туба_СЕВЕРЯНИН_Паста_для_очистки_с_ПВХ_200_мл_Лам_Винт;Туба СЕВЕРЯНИН Паста для очистки с ПВХ, 200 мл, Лам, Винт;PACKAGING;pcs;WH_PC;1186;FINISHED;
+738bed82-f733-4266-86ea-3c18a84d4376;PKG_Флакон_белый_1_л;Флакон белый, 1 л;PACKAGING;pcs;WH_PC;1531;FINISHED;
+ffc3b822-83bf-44dd-9e4d-158f1c77abe2;PKG_Флакон_гель_24410_без_крышки_100_мл;Флакон гель 24/410 без крышки, 100 мл;PACKAGING;pcs;WH_PC;1204;FINISHED;
+40fcb778-c07e-4553-a8b4-563398118cf3;PKG_Флакон_гель_24410_без_крышки_200_мл;Флакон гель 24/410 без крышки, 200 мл;PACKAGING;pcs;WH_PC;1528;FINISHED;
+da29fcfc-951e-4af0-aaa3-e0313bd16068;PKG_Флакон_гель_24410_без_крышки_250_мл;Флакон гель 24/410 без крышки, 250 мл;PACKAGING;pcs;WH_PC;1075;FINISHED;
+0c3691d5-e509-43be-8188-87e5b0bcca86;PKG_Флакон_мыло_круглый_250_мл;Флакон мыло круглый, 250 мл;PACKAGING;pcs;WH_PC;1475;FINISHED;
+5109ed50-8f96-4444-ab41-6fd568199574;PKG_Флакон_пуш_пул_260_мл;Флакон пуш-пул, 260 мл;PACKAGING;pcs;WH_PC;1431;FINISHED;
+5f064cfd-ec4e-47e2-b88e-290285b871d4;PKG_Этикетка_100133_Geco_Спрей_защитный_3в1_от_мошки_комаров_и_клещей_флакон_200_мл;Этикетка 100*133 Geco Спрей защитный 3в1 от мошки, комаров  и клещей (флакон 200 мл);PACKAGING;pcs;WH_PC;1548;FINISHED;
+5fdde1a4-8e79-494f-a937-49e8b23adf42;PKG_Этикетка_140149_Geco_регенерирующий_200мл;Этикетка 140*149 Geco регенерирующий 200мл;PACKAGING;pcs;WH_PC;384;FINISHED;200
+e38e6daa-4d34-4b75-ab27-2258139f6f05;PKG_Этикетка_72122_Geco_Спрей_защитный_3в1_от_мошки_комаров_и_клещей_флакон_100_мл;Этикетка 72*122 Geco Спрей защитный 3в1 от мошки, комаров  и клещей (флакон 100 мл);PACKAGING;pcs;WH_PC;1936;FINISHED;
+cd3c0f75-7e8c-46ae-9f2a-ca61219faaf2;PKG_Этикетка_7759_Geco_Мыло_АНТИБАКТЕР_жидкое_пенное_для_очистки_кожи_с_увлажняющим_;Этикетка 77*59 Geco Мыло АНТИБАКТЕР жидкое пенное для очистки кожи с увлажняющим эффектом(флакон 250;PACKAGING;pcs;WH_PC;1258;FINISHED;
+72ce8884-0758-4e69-96b5-3e0b40f44f1c;PKG_Этикетка_7759_Geco_Мыло_жидкое_пенное_для_очистки_кожи_с_увлажняющим_эффектом_фл;Этикетка 77*59 Geco Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (флакон 250мл);PACKAGING;pcs;WH_PC;807;FINISHED;
+65079e97-946b-40b7-bf51-38b70ef5e4ef;PKG_Этикетка_Geco_гидрофобный_бутыль_с_помпой_1_л;Этикетка Geco гидрофобный (бутыль с помпой 1 л);PACKAGING;pcs;WH_PC;312;FINISHED;
+d74739dc-4260-420a-bca2-1247f74a0854;PKG_Этикетка_GECO_Крем_гель_для_очистки_рук_тела_и_волос_2_л_Картридж_Крышка;Этикетка GECO Крем_гель для очистки рук тела и волос, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;562;FINISHED;
+58300499-1939-4415-963f-445323cbb977;PKG_Этикетка_Geco_Крем_гидрофильный_Картридж_в_деспенсер_настенный_2000_мл;Этикетка Geco Крем гидрофильный (Картридж в деспенсер настенный, 2000 мл);PACKAGING;pcs;WH_PC;1415;FINISHED;1000
+645904e1-6de2-46c2-8d4b-173c05dda54b;PKG_Этикетка_Geco_Крем_гидрофобный_Картридж_в_деспенсер_настенный_2000_мл;Этикетка Geco Крем гидрофобный (Картридж в деспенсер настенный, 2000 мл);PACKAGING;pcs;WH_PC;545;FINISHED;
+d4e4487c-7e17-40e9-b41c-092fa688e452;PKG_Этикетка_GECO_Крем_от_УФ_2_л_Картридж_Крышка;Этикетка GECO Крем от  УФ, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;1733;FINISHED;
+f0c13a57-718d-40b8-929c-c2ac7315a2d2;PKG_Этикетка_GECO_Крем_регенерирующий_2_л_Картридж_Крышка;Этикетка GECO Крем регенерирующий, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;1733;FINISHED;
+f52a21ba-310a-4c5a-a65d-2f8a1053c0fa;PKG_Этикетка_GECO_Крем_универсальный_2_л_Картридж_Крышка;Этикетка GECO Крем универсальный, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;1192;FINISHED;
+79efc633-40af-4945-9081-79468570c23e;PKG_Этикетка_Geco_Мыло_жидкое_пенное_для_очистки_кожи_с_увлажняющим_эффектом_канистр;Этикетка Geco Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (канистра 5 л);PACKAGING;pcs;WH_PC;493;FINISHED;
+7e661cf4-c3fa-4f99-951f-06a18a15f8cf;PKG_Этикетка_GECO_Мыло_жидкое_пенное_для_очистки_кожи_с_увлажняющим_эффектом_Картрид;Этикетка GECO Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (Картридж 2000 мл);PACKAGING;pcs;WH_PC;1212;FINISHED;
+0a4b538b-d201-4adb-8768-c99fe2e9655a;PKG_Этикетка_Geco_Мыло_жидкое_пенное_для_очистки_кожи_с_увлажняющим_эффектом_флакон_;Этикетка Geco Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (флакон 1000 мл);PACKAGING;pcs;WH_PC;194;FINISHED;
+922467dd-77c5-49cb-abdc-6917944a3715;PKG_Этикетка_GECO_Мыло_жидкое_пенное_для_очистки_кожи_с_увлажняющим_эффектом_флакон_;Этикетка GECO Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (флакон 300мл);PACKAGING;pcs;WH_PC;1928;FINISHED;
+a0116afc-15af-417f-b097-b43fc060326e;PKG_Этикетка_GECO_Паста_для_очистки_2_л_Картридж_Крышка;Этикетка GECO Паста для очистки, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;1274;FINISHED;
+e5b8c539-569e-4254-8869-aef754342912;PKG_Этикетка_Geco_Паста_для_очистки_от_красителей_2_л_Картридж_Крышка;Этикетка Geco Паста для очистки от красителей, 2 л, Картридж, Крышка;PACKAGING;pcs;WH_PC;1579;FINISHED;
+4b088606-1ff3-49b6-8ee4-ee1d2cb147d7;PKG_Этикетка_Geco_Паста_специальная_бутыль_с_помпой_1_л;Этикетка Geco Паста специальная (бутыль с помпой 1 л);PACKAGING;pcs;WH_PC;1096;FINISHED;
+4b42cef1-c9ae-4954-b458-da147460defe;PKG_Этикетка_Geco_спрей_АНТИБАКТЕРИАЛЬНЫЙ_для_ног_и_рук_от_потоотделения_флакон_100_;Этикетка Geco спрей АНТИБАКТЕРИАЛЬНЫЙ для ног и рук от потоотделения (флакон 100 мл);PACKAGING;pcs;WH_PC;1530;FINISHED;440
+e6c272ac-e2c5-4141-b3e3-0251351262cc;PKG_Этикетка_Geco_спрей_АНТИБАКТЕРИАЛЬНЫЙ_для_ног_и_рук_от_потоотделения_флакон_200_;Этикетка Geco спрей АНТИБАКТЕРИАЛЬНЫЙ для ног и рук от потоотделения (флакон 200 мл);PACKAGING;pcs;WH_PC;632;FINISHED;
+5a6be84f-7517-4af2-b34b-29bb02a85641;PKG_Этикетка_Честный_знак;"Этикетка ""Честный знак""";PACKAGING;pcs;WH_PC;1594;FINISHED;
+e8807173-e57b-4fd1-9b34-69d57465d449;PKG_Этикет_лента_100100_350штрул_термо_ЭКО_втулка_41мм;Этикет-лента 100*100 (350шт/рул) термо ЭКО, втулка 41мм;PACKAGING;pcs;WH_PC;1374;FINISHED;
+31472720-2e8d-40a6-a29e-e1e6f203143b;RAW_Бензофенон_4;Бензофенон-4;RAW_MATERIAL;kg;WH_RM;235;FINISHED;
+b0c95f8e-9acb-4a7c-9a5d-4bb58512f971;RAW_Бентонит;Бентонит;RAW_MATERIAL;kg;WH_RM;526;FINISHED;
+c6ba7a44-8c5d-4f52-b032-cf77308b0869;RAW_Бетаин_кокоамидопропил;Бетаин кокоамидопропил;RAW_MATERIAL;kg;WH_RM;971;FINISHED;
+74e9f935-4590-4b55-95cb-cdf1c869add5;RAW_Вазелин;Вазелин;RAW_MATERIAL;kg;WH_RM;575;FINISHED;
+0b7951ad-69e5-4902-a10b-9c6e6b0d88dd;RAW_Витамин_Е;Витамин-Е;RAW_MATERIAL;kg;WH_RM;1534;FINISHED;600
+81e6a129-35fb-4e44-8936-2c7397303d3c;RAW_Глицерин;Глицерин;RAW_MATERIAL;kg;WH_RM;496;FINISHED;
+6a5304ea-919f-4782-88bf-8746c1883e66;RAW_Диоксид_титана;Диоксид титана;RAW_MATERIAL;kg;WH_RM;1026;FINISHED;
+9f521f9f-2080-4b86-80a8-56d39b3c97a2;RAW_Диэфир_Estisol_150;Диэфир (Estisol 150);RAW_MATERIAL;kg;WH_RM;313;FINISHED;
+d9d02835-eced-473d-8614-09b16e1caf71;RAW_Д_пантенол;Д-пантенол;RAW_MATERIAL;kg;WH_RM;1307;FINISHED;
+a6df60f2-30f3-45c3-afe4-e33b5f6fdf55;RAW_ДЭТА_Диэтилтолуамид;ДЭТА Диэтилтолуамид;RAW_MATERIAL;kg;WH_RM;1855;FINISHED;800
+00944a3e-5949-4eac-a752-83f1b2b888c6;RAW_Изопропиловый_спирт;Изопропиловый спирт;RAW_MATERIAL;kg;WH_RM;1483;FINISHED;
+1aaf5cf3-65ce-49a4-a5df-63fcfb52370d;RAW_Изопропилпальмитат;Изопропилпальмитат;RAW_MATERIAL;kg;WH_RM;1104;FINISHED;
+528733a5-28f0-4556-ada8-9fdfb0d38eb2;RAW_Каолин;Каолин;RAW_MATERIAL;kg;WH_RM;1155;FINISHED;
+7269ecf6-040e-4564-b59f-52c7165d5164;RAW_Карбамид;Карбамид;RAW_MATERIAL;kg;WH_RM;1020;FINISHED;
+0ad113f1-f47d-468d-a65f-d5d878854e13;RAW_Квасцы_алюмокалиевые;Квасцы алюмокалиевые;RAW_MATERIAL;kg;WH_RM;1031;FINISHED;
+47dbe871-fcb1-41f7-ba75-40b0a4d96e0c;RAW_Кокодиэтаноламид_ДЭА;Кокодиэтаноламид (ДЭА);RAW_MATERIAL;kg;WH_RM;599;FINISHED;
+deef4daa-f720-433c-bc4f-953ea8aaff25;RAW_Консервант_Kemaben;Консервант Kemaben;RAW_MATERIAL;kg;WH_RM;1555;FINISHED;
+f7d5a6e2-dbc5-4141-8e97-63e467ee07a7;RAW_Консервант_Катон_CG;Консервант Катон CG;RAW_MATERIAL;kg;WH_RM;1772;FINISHED;700
+e221386a-8eef-4a48-9043-3d9926f1d9f7;RAW_Краситель_желтый_Солнечный_закат_Е110;"Краситель желтый ""Солнечный закат"" Е110";RAW_MATERIAL;kg;WH_RM;1033;FINISHED;
+09ce3649-8d36-4a06-83ea-3719c9249e6d;RAW_Краситель_Зеленое_яблоко_R100;"Краситель ""Зеленое яблоко"" R100";RAW_MATERIAL;kg;WH_RM;609;FINISHED;
+7f66b9d6-5575-4bb4-96bf-d0b93eb0dede;RAW_Ксантановая_камедь;Ксантановая камедь;RAW_MATERIAL;kg;WH_RM;1436;FINISHED;
+3dfadf30-08ca-4b7e-8fd8-979a6210ba2b;RAW_Лаурет_3;Лаурет-3;RAW_MATERIAL;kg;WH_RM;1301;FINISHED;
+f3e967c1-5021-46eb-a9c7-18ba98a4815c;RAW_Лаурет_7;Лаурет-7;RAW_MATERIAL;kg;WH_RM;889;FINISHED;
+e9a0909d-ad2e-42af-827a-8b357d212cdc;RAW_Лауретсульфат_натрия_SLES;Лауретсульфат натрия (SLES);RAW_MATERIAL;kg;WH_RM;439;FINISHED;
+7e054018-f71b-4703-9515-930de04a66b9;RAW_Лаурилсульфат_натрия_SLS;Лаурилсульфат натрия (SLS);RAW_MATERIAL;kg;WH_RM;1113;FINISHED;
+2279a789-c5fb-4c1a-a78a-073b4318c991;RAW_Лимонная_кислота;Лимонная кислота;RAW_MATERIAL;kg;WH_RM;1715;FINISHED;800
+720f6dfb-159d-4fcb-a092-473477ccbd8a;RAW_Масло_парфюмерное;Масло парфюмерное;RAW_MATERIAL;kg;WH_RM;359;FINISHED;
+bf11b701-f937-4041-932e-c0f108f0b5da;RAW_Масло_подсолнечное_рафинированное;Масло подсолнечное рафинированное;RAW_MATERIAL;kg;WH_RM;1485;FINISHED;
+616ab42b-0aa1-4de8-bbc2-89935a0f02b0;RAW_Масса_СК_СО2_экстракт_ежевики_лист_10;Масса СК-СО2 экстракт ежевики (лист) 10%;RAW_MATERIAL;kg;WH_RM;1282;FINISHED;
+0242ceea-db31-436c-a5de-07f745ea99b1;RAW_Масса_СК_СО2_экстракт_малины_лист_10;Масса СК-СО2 экстракт малины (лист) 10%;RAW_MATERIAL;kg;WH_RM;562;FINISHED;
+3b0e2583-2d37-4916-a081-691bcd43de58;RAW_Масса_СК_СО2_экстракт_облепихи_лист_10;Масса СК-СО2 экстракт облепихи (лист) 10%;RAW_MATERIAL;kg;WH_RM;1535;FINISHED;
+dd0d8336-ca1a-4da4-96e9-e0093fb80701;RAW_Масса_СК_СО2_экстракт_облепихи_лист_10_водорастворимый;Масса СК-СО2 экстракт облепихи (лист) 10% водорастворимый;RAW_MATERIAL;kg;WH_RM;782;FINISHED;
+05dd4030-f6e2-4291-984e-834a88e6fdc7;RAW_Масса_СК_СО2_экстракт_спаржи_побеги_10;Масса СК-СО2 экстракт спаржи (побеги) 10%;RAW_MATERIAL;kg;WH_RM;1318;FINISHED;1000
+c6595ec4-fbc5-4375-927a-261759b19730;RAW_Масса_СК_СО2_экстракт_спаржи_побеги_10_водорастворимый;Масса СК-СО2 экстракт спаржи (побеги) 10% водорастворимый;RAW_MATERIAL;kg;WH_RM;1121;FINISHED;
+eab5a46d-2c18-4c7c-92cd-04a7d03b8104;RAW_Моностеарат_глицерина;Моностеарат глицерина;RAW_MATERIAL;kg;WH_RM;843;FINISHED;
+ccdca235-8c23-4a2a-bfb5-4568748454db;RAW_Отдушка_GREEN_OLIVE_SALAD;Отдушка GREEN OLIVE SALAD;RAW_MATERIAL;kg;WH_RM;1881;FINISHED;
+49c3cc56-95a2-4368-9bc7-b070d80c17b7;RAW_Отдушка_MANGO_FRAGRAND;"Отдушка ""MANGO FRAGRAND""";RAW_MATERIAL;kg;WH_RM;1165;FINISHED;
+55bda499-6295-4e9a-83b9-0af5a06cf0e5;RAW_Отдушка_RELAX_247060;Отдушка RELAX 247060;RAW_MATERIAL;kg;WH_RM;1995;FINISHED;
+92c7c12e-84b1-4a6f-9917-a483ebb7575f;RAW_Отдушка_Алоэ_Вера_IFF_628;Отдушка Алоэ Вера IFF 628;RAW_MATERIAL;kg;WH_RM;1920;FINISHED;
+7100e60e-9934-471d-92cc-4c7c2d4387c2;RAW_Отдушка_Яблоко_Зеленое_CFB_17300;Отдушка Яблоко Зеленое CFB 17300;RAW_MATERIAL;kg;WH_RM;917;FINISHED;
+75060391-e67e-4ffc-bb20-e8c5390cde27;RAW_Перламутровый_концентрат;Перламутровый концентрат;RAW_MATERIAL;kg;WH_RM;1001;FINISHED;
+f0be70c8-ea9f-47d0-b7aa-ceef5d5386b1;RAW_Поликватерниум_7;Поликватерниум-7;RAW_MATERIAL;kg;WH_RM;1138;FINISHED;
+6e382670-ceaf-4909-8e1b-a4da3ebbc951;RAW_Полисорбат_20;Полисорбат 20;RAW_MATERIAL;kg;WH_RM;1565;FINISHED;
+68cfd223-8845-4cd8-a461-56841837227b;RAW_ПЭГ_40_этоксилированное_гидрогенизированное_касторовое_масло;ПЭГ-40 этоксилированное гидрогенизированное касторовое масло;RAW_MATERIAL;kg;WH_RM;1212;FINISHED;
+27c775d7-300b-456a-a442-46dd37d19f0b;RAW_Скорлупа_фундука_ореха_01_04;Скорлупа фундука ореха 0,1-0,4;RAW_MATERIAL;kg;WH_RM;1516;FINISHED;
+3c479775-c2c5-4bb0-8cb7-cc484377ee97;RAW_Скорлупа_фундука_ореха_02_04;Скорлупа фундука ореха 0,2-0,4;RAW_MATERIAL;kg;WH_RM;396;FINISHED;
+a2c29d19-4821-4775-8d5c-81a8e02f531b;RAW_Соль_мелкого_помола;Соль мелкого помола;RAW_MATERIAL;kg;WH_RM;1715;FINISHED;
+a16b5337-eff8-47b2-8554-62de090b73aa;RAW_Стеариновая_кислота;Стеариновая кислота;RAW_MATERIAL;kg;WH_RM;101;FINISHED;
+287d2c5d-9c8e-47e4-9810-0f859abe4425;RAW_Триклозан;Триклозан;RAW_MATERIAL;kg;WH_RM;1097;FINISHED;
+55c63f6a-2fe7-4711-9518-a6473ea49693;RAW_Трилон_Б;Трилон-Б;RAW_MATERIAL;kg;WH_RM;1447;FINISHED;
+5cc52e93-4472-4175-a06b-3a882436ffa4;RAW_Триэтаноламин_ТЭА;Триэтаноламин (ТЭА);RAW_MATERIAL;kg;WH_RM;166;FINISHED;
+9c4f7377-4545-44bd-a0e1-d935f979dc24;RAW_Хлоргексидин;Хлоргексидин;RAW_MATERIAL;kg;WH_RM;912;FINISHED;
+4649b91e-32c1-4735-9a0d-b775a62ede1f;RAW_Цетостеариловый_спирт;Цетостеариловый спирт;RAW_MATERIAL;kg;WH_RM;426;FINISHED;
+074cac16-e480-40af-a5f9-ac86347bfbb1;RAW_Циклометикон;Циклометикон;RAW_MATERIAL;kg;WH_RM;773;FINISHED;
+3f2ff5cb-325a-4860-a021-1b7f00d46d59;RAW_Эфирное_масло_лаванды;Эфирное масло лаванды;RAW_MATERIAL;kg;WH_RM;1638;FINISHED;
+f0a803b8-f926-4232-a28f-b51913110516;RAW_Эфирное_масло_мяты;Эфирное масло мяты;RAW_MATERIAL;kg;WH_RM;709;FINISHED;
+d6938262-4c5c-4743-b931-2f9ed1ee0f50;RAW_Эфирное_масло_чайного_дерева;Эфирное масло чайного дерева;RAW_MATERIAL;kg;WH_RM;1453;FINISHED;1200
