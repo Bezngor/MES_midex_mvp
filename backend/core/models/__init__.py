@@ -15,6 +15,7 @@ from backend.core.models.batch import Batch
 from backend.core.models.inventory_balance import InventoryBalance
 from backend.core.models.work_center_capacity import WorkCenterCapacity
 from backend.core.models.product_routing_rule import ProductRoutingRule
+from backend.core.models.order_snapshot import OrderSnapshot
 from backend.core.models.enums import (
     OrderStatus,
     TaskStatus,
@@ -36,6 +37,7 @@ __all__ = [
     "InventoryBalance",
     "WorkCenterCapacity",
     "ProductRoutingRule",
+    "OrderSnapshot",
     "OrderStatus",
     "TaskStatus",
     "WorkCenterStatus",

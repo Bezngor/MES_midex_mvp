@@ -29,6 +29,8 @@ import type {
   DsizPlanningResponse,
   DispatchRunRequest,
   DispatchPreviewResponse,
+  OrderChangesListResponse,
+  OrderChangeDetailResponse,
 } from '../types/api';
 
 // Базовый URL API: должен заканчиваться на /api/v1 для корректной работы маршрутов (batches/{id}/start и т.д.)
@@ -250,6 +252,17 @@ export const ordersAPI = {
     priority?: string;
   }): Promise<ApiResponse<ManufacturingOrder>> => {
     return api.post('/manufacturing-orders', data);
+  },
+  /** Получить список новых и изменённых заказов (бизнес-процесс: Блок обновления данных) */
+  getChanges: async (params?: {
+    order_type?: 'CUSTOMER' | 'INTERNAL_BULK';
+    since_date?: string; // ISO date string
+  }): Promise<OrderChangesListResponse> => {
+    return api.get('/manufacturing-orders/changes', { params });
+  },
+  /** Получить детали изменений конкретного заказа (drill-down) */
+  getChangeDetails: async (orderId: string): Promise<OrderChangeDetailResponse> => {
+    return api.get(`/manufacturing-orders/${orderId}/changes`);
   },
 };
 

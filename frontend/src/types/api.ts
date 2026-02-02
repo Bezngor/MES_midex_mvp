@@ -139,3 +139,34 @@ export interface DispatchPreviewResponse {
     conflicts: ConflictInfo[];
   };
 }
+
+/**
+ * Order Changes types for identifying new/changed orders
+ */
+export interface OrderChangeInfo {
+  order_id?: string | null; // Может быть null для удалённых заказов
+  order_number: string;
+  product_id: string;
+  product_name?: string | null;
+  is_new: boolean;
+  is_changed: boolean;
+  is_deleted?: boolean; // Новое поле для удалённых заказов
+  last_snapshot_date?: string | null;
+  current_updated_at?: string | null;
+  changes?: Record<string, [any, any]> | null; // {field: [old_value, new_value]}
+}
+
+export interface OrderChangesListResponse {
+  success: boolean;
+  new_orders: OrderChangeInfo[];
+  changed_orders: OrderChangeInfo[];
+  deleted_orders: OrderChangeInfo[]; // Новое поле для удалённых заказов
+  total_new: number;
+  total_changed: number;
+  total_deleted: number; // Новое поле
+}
+
+export interface OrderChangeDetailResponse {
+  success: boolean;
+  data: OrderChangeInfo | null;
+}
