@@ -142,9 +142,10 @@ class StrategicPlanningService:
         3. Если не хватает Массы, проверить уровень Массы
         4. Резервировать все компоненты только если всех хватает
         """
+        # product_id в ManufacturingOrder хранится как String
         try:
             product_id = UUID(order.product_id)
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, TypeError):
             return ComponentReservationResult(
                 order_id=order.id,
                 success=False,
@@ -167,8 +168,9 @@ class StrategicPlanningService:
                 missing_components={product_id: required_quantity},
             )
 
-        # Проверяем, есть ли среди компонентов Масса (BULK)
+        # Разделяем компоненты на уровень ГП и Массу (BULK)
         mass_product_id = None
+        mass_required_qty = 0.0
         fg_components: Dict[UUID, float] = {}
 
         for bom_entry in fg_bom_entries:
@@ -178,43 +180,42 @@ class StrategicPlanningService:
             # Проверяем, является ли компонент Массой (BULK)
             if child_product and child_product.product_type == ProductType.BULK.value:
                 mass_product_id = child_id
+                mass_required_qty = float(bom_entry.quantity) * required_quantity
             else:
                 # Обычный компонент уровня ГП
                 required_qty = float(bom_entry.quantity) * required_quantity
                 fg_components[child_id] = required_qty
 
-        # Проверяем доступность компонентов уровня ГП
+        # Шаг 1: Проверяем доступность всех компонентов уровня ГП
         missing_fg_components: Dict[UUID, float] = {}
         for comp_id, required_qty in fg_components.items():
             available = self._get_available_quantity(comp_id)
             if available < required_qty:
                 missing_fg_components[comp_id] = required_qty - available
 
-        # Если не хватает Массы, проверяем уровень Массы
+        # Шаг 2: Если есть Масса, проверяем её доступность и компоненты Массы
         missing_mass_components: Dict[UUID, float] = {}
-        if mass_product_id:
-            mass_required_qty = next(
-                (float(bom.quantity) * required_quantity for bom in fg_bom_entries if bom.child_product_id == mass_product_id),
-                0.0,
-            )
+        if mass_product_id and mass_required_qty > 0:
+            mass_available = self._get_available_quantity(mass_product_id)
+            if mass_available < mass_required_qty:
+                # Не хватает Массы - проверяем компоненты уровня Массы
+                mass_bom_entries = (
+                    self.db.query(BillOfMaterial)
+                    .filter(BillOfMaterial.parent_product_id == mass_product_id)
+                    .all()
+                )
 
-            if mass_required_qty > 0:
-                mass_available = self._get_available_quantity(mass_product_id)
-                if mass_available < mass_required_qty:
-                    # Проверяем BOM Массы
-                    mass_bom_entries = (
-                        self.db.query(BillOfMaterial)
-                        .filter(BillOfMaterial.parent_product_id == mass_product_id)
-                        .all()
-                    )
-
+                if not mass_bom_entries:
+                    # Нет BOM для Массы - это ошибка
+                    missing_mass_components[mass_product_id] = mass_required_qty - mass_available
+                else:
+                    # Проверяем доступность всех компонентов Массы
                     mass_components: Dict[UUID, float] = {}
                     for bom_entry in mass_bom_entries:
                         comp_id = bom_entry.child_product_id
                         required_qty = float(bom_entry.quantity) * mass_required_qty
                         mass_components[comp_id] = required_qty
 
-                    # Проверяем доступность всех компонентов Массы
                     for comp_id, required_qty in mass_components.items():
                         available = self._get_available_quantity(comp_id)
                         if available < required_qty:
@@ -229,32 +230,47 @@ class StrategicPlanningService:
                 missing_components=all_missing,
             )
 
-        # Резервируем все компоненты
+        # Шаг 3: Резервируем все компоненты (только если всех хватает)
         reserved_components: Dict[UUID, float] = {}
 
-        # Резервируем компоненты уровня ГП
-        for comp_id, required_qty in fg_components.items():
-            self._reserve_component(comp_id, required_qty)
-            reserved_components[comp_id] = required_qty
-
-        # Если нужна Масса, резервируем компоненты Массы
-        if mass_product_id and mass_required_qty > 0:
-            mass_bom_entries = (
-                self.db.query(BillOfMaterial)
-                .filter(BillOfMaterial.parent_product_id == mass_product_id)
-                .all()
-            )
-            for bom_entry in mass_bom_entries:
-                comp_id = bom_entry.child_product_id
-                required_qty = float(bom_entry.quantity) * mass_required_qty
+        try:
+            # Резервируем компоненты уровня ГП
+            for comp_id, required_qty in fg_components.items():
                 self._reserve_component(comp_id, required_qty)
                 reserved_components[comp_id] = required_qty
 
-        return ComponentReservationResult(
-            order_id=order.id,
-            success=True,
-            reserved_components=reserved_components,
-        )
+            # Если нужна Масса и её нет на остатке, резервируем компоненты Массы
+            if mass_product_id and mass_required_qty > 0:
+                mass_available = self._get_available_quantity(mass_product_id)
+                if mass_available < mass_required_qty:
+                    # Резервируем компоненты Массы
+                    mass_bom_entries = (
+                        self.db.query(BillOfMaterial)
+                        .filter(BillOfMaterial.parent_product_id == mass_product_id)
+                        .all()
+                    )
+                    for bom_entry in mass_bom_entries:
+                        comp_id = bom_entry.child_product_id
+                        required_qty = float(bom_entry.quantity) * mass_required_qty
+                        self._reserve_component(comp_id, required_qty)
+                        reserved_components[comp_id] = required_qty
+
+            # Коммитим резервирование
+            self.db.commit()
+
+            return ComponentReservationResult(
+                order_id=order.id,
+                success=True,
+                reserved_components=reserved_components,
+            )
+        except Exception as e:
+            # Откатываем транзакцию при ошибке
+            self.db.rollback()
+            return ComponentReservationResult(
+                order_id=order.id,
+                success=False,
+                missing_components={},
+            )
 
     def _get_available_quantity(self, product_id: UUID) -> float:
         """Получить доступное количество продукта (quantity - reserved_quantity)."""

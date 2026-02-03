@@ -102,7 +102,7 @@ export const StrategicPlanningPage: React.FC = () => {
   const filteredNewOrders = filterOrdersByPriority(newOrders);
   const filteredChangedOrders = filterOrdersByPriority(changedOrders);
 
-  // Обработка пересчёта плана (заглушка)
+  // Обработка пересчёта плана
   const handleRecalculatePlan = async () => {
     const acceptedOrders = [...newOrders, ...changedOrders].filter((order) => {
       const orderId = order.order_id || order.order_number;
@@ -114,10 +114,53 @@ export const StrategicPlanningPage: React.FC = () => {
       return;
     }
 
-    // TODO: Реализовать алгоритм пересчёта после одобрения прототипа
-    alert(
-      `Пересчёт плана для ${acceptedOrders.length} заказов.\nАлгоритм пересчёта будет реализован после одобрения прототипа.`
-    );
+    setLoading(true);
+    setError(null);
+
+    try {
+      const orderIds = acceptedOrders
+        .map((order) => order.order_id)
+        .filter((id): id is string => id != null && id.length === 36);
+
+      if (orderIds.length === 0) {
+        setError('Не удалось получить ID заказов для планирования');
+        return;
+      }
+
+      const response = await ordersAPI.recalculatePlan(orderIds);
+
+      if (response.success && response.data) {
+        const result = response.data;
+
+        // Показываем результаты
+        if (result.failed_orders && result.failed_orders.length > 0) {
+          alert(
+            `Пересчёт завершён.\nУспешно зарезервировано: ${result.reserved_orders.length} заказов.\nОшибки резервирования: ${result.failed_orders.length} заказов.`
+          );
+          // TODO: Обновить UI для показа ошибок резервирования с drill-down
+        } else {
+          alert(`Пересчёт завершён успешно. Зарезервировано: ${result.reserved_orders.length} заказов.`);
+        }
+
+        // TODO: Обновить Гант-диаграмму с новыми операциями
+        // TODO: Удалить принятые заказы из списков
+      } else {
+        setError(response.error || 'Ошибка при пересчёте плана');
+      }
+    } catch (e) {
+      const msg =
+        e != null &&
+        typeof e === 'object' &&
+        'message' in e &&
+        typeof (e as { message: unknown }).message === 'string'
+          ? (e as { message: string }).message
+          : typeof e === 'string'
+            ? e
+            : 'Ошибка при пересчёте плана';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

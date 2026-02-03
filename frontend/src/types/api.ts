@@ -173,3 +173,22 @@ export interface OrderChangeDetailResponse {
   success: boolean;
   data: OrderChangeInfo | null;
 }
+
+/**
+ * Strategic Planning types
+ */
+export interface StrategicPlanningResponse {
+  reserved_orders: string[]; // Заказы с успешно зарезервированными компонентами
+  failed_orders: Array<{
+    order_id: string;
+    missing_components: Record<string, number>; // {product_id: недостающее_количество}
+  }>;
+  planned_operations: Array<{
+    order_id: string;
+    operation_type: 'REACTOR' | 'WORK_CENTER';
+    work_center_id?: string;
+    scheduled_start: string;
+    scheduled_end: string;
+    quantity: number;
+  }>;
+}

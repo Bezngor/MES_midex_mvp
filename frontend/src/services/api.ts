@@ -31,6 +31,7 @@ import type {
   DispatchPreviewResponse,
   OrderChangesListResponse,
   OrderChangeDetailResponse,
+  StrategicPlanningResponse,
 } from '../types/api';
 
 // Базовый URL API: должен заканчиваться на /api/v1 для корректной работы маршрутов (batches/{id}/start и т.д.)
@@ -263,6 +264,10 @@ export const ordersAPI = {
   /** Получить детали изменений конкретного заказа (drill-down) */
   getChangeDetails: async (orderId: string): Promise<OrderChangeDetailResponse> => {
     return api.get(`/manufacturing-orders/${orderId}/changes`);
+  },
+  /** Пересчитать план производства для принятых заказов */
+  recalculatePlan: async (orderIds: string[]): Promise<ApiResponse<StrategicPlanningResponse>> => {
+    return api.post('/strategic-planning/recalculate-plan', { order_ids: orderIds });
   },
 };
 

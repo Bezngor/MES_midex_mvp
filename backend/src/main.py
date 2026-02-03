@@ -27,6 +27,7 @@ from backend.core.routes import (
     mrp,
     validation,
     dev,
+    strategic_planning,
 )
 from backend.customizations.dsiz.routes import dsiz_planning_router, dsiz_dispatching_router
 from backend.core.services.dispatching_service import DispatchingService
@@ -145,6 +146,7 @@ app.include_router(inventory.router, tags=["inventory"])
 app.include_router(work_center_capacities.router, tags=["work-center-capacities"])
 app.include_router(mrp.router, tags=["MRP"])
 app.include_router(validation.router, tags=["validation"])
+app.include_router(strategic_planning.router, tags=["strategic-planning"])
 app.include_router(dev.router)
 app.include_router(dsiz_planning_router, prefix="/api/v1", tags=["DSIZ"])
 app.include_router(dsiz_dispatching_router, prefix="/api/v1", tags=["DSIZ"])
