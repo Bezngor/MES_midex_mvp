@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { GanttChart } from '../components/scheduling/GanttChart';
 import { OrdersListWithAccept } from '../components/strategic/OrdersListWithAccept';
+import { ChangedOrdersList } from '../components/strategic/ChangedOrdersList';
 import { PriorityFilters, Priority } from '../components/strategic/PriorityFilters';
 import { ordersAPI } from '../services/api';
 import type { OrderChangeInfo } from '../types/api';
@@ -131,14 +132,6 @@ export const StrategicPlanningPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Гант-диаграмма с утверждёнными заданиями */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
-            Утверждённый план производства
-          </h2>
-          <GanttChart />
-        </div>
-
         {/* Кнопка "Обновить заказы покупателей" */}
         <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
@@ -204,15 +197,12 @@ export const StrategicPlanningPage: React.FC = () => {
             />
 
             {/* Список изменённых заказов */}
-            <OrdersListWithAccept
+            <ChangedOrdersList
               orders={filteredChangedOrders}
               acceptedOrderIds={acceptedOrderIds}
               onAccept={handleAccept}
               onCancel={handleCancel}
-              title="Изменённые заказы"
               getPriority={getOrderPriority}
-              getQuantity={getOrderQuantity}
-              getDueDate={getOrderDueDate}
             />
 
             {/* Сообщение, если нет заказов */}
@@ -259,6 +249,14 @@ export const StrategicPlanningPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Гант-диаграмма с утверждёнными заданиями */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            Утверждённый план производства
+          </h2>
+          <GanttChart />
+        </div>
       </main>
     </div>
   );
