@@ -148,6 +148,9 @@ export interface OrderChangeInfo {
   order_number: string;
   product_id: string;
   product_name?: string | null;
+  quantity?: number | null; // Количество ГП в заказе
+  due_date?: string | null; // Дата выполнения заказа (ISO string)
+  priority?: 'URGENT' | 'HIGH' | 'NORMAL' | 'LOW' | null; // Приоритет заказа
   is_new: boolean;
   is_changed: boolean;
   is_deleted?: boolean; // Новое поле для удалённых заказов

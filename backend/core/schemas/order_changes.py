@@ -23,6 +23,9 @@ class OrderChangeInfo(BaseModel):
     order_number: str
     product_id: str
     product_name: Optional[str] = None
+    quantity: Optional[float] = Field(None, description="Количество ГП в заказе")
+    due_date: Optional[datetime] = Field(None, description="Дата выполнения заказа")
+    priority: Optional[str] = Field(None, description="Приоритет заказа (URGENT/HIGH/NORMAL/LOW)")
     is_new: bool = Field(..., description="Является ли заказ новым (нет снимков)")
     is_changed: bool = Field(default=False, description="Был ли заказ изменён")
     is_deleted: bool = Field(default=False, description="Был ли заказ удалён (есть в снимках, но отсутствует в таблице)")
