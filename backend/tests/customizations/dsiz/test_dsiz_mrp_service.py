@@ -7,7 +7,7 @@ Unit тесты для DSIZMRPService.
 import pytest
 from datetime import date, datetime, timezone, timedelta
 from uuid import uuid4
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from backend.customizations.dsiz.services.dsiz_mrp_service import (
     DSIZMRPService, NetRequirement, BatchOrder
@@ -324,8 +324,73 @@ def test_calculate_net_requirement_sufficient_bulk(test_db):
 
 
 # ============================================================================
-# plan_reactor_batches Tests
+# plan_reactor_batches Tests — CIP blocking rule (unit, no DB)
 # ============================================================================
+
+
+class TestPlanReactorBatchesCIP:
+    """CIP blocking: понедельник смена 1 = нет варок. Unit tests без реальной БД."""
+
+    def setup_method(self):
+        """Setup mock DB session and service."""
+        self.mock_db = MagicMock()
+        # Чтобы plan_reactor_batches не падал на _determine_reactor_mode и на batch_quantity_kg:
+        # first() = None → режим PASTE_MODE, batch_quantity_kg = required_kg
+        self.mock_db.query.return_value.filter.return_value.first.return_value = None
+        with patch.object(DSIZMRPService, '_load_dsiz_config'):
+            self.service = DSIZMRPService(self.mock_db)
+        self.service.config = {
+            'reactor': {
+                'max_cycles_per_shift': 2,
+                'cip_schedule': 'monday_shift_1'
+            },
+            'work_center_modes': {},
+            'product_routing': {}
+        }
+
+    def test_cip_blocks_monday_shift_1(self):
+        """CIP: понедельник смена 1 — возвращает пустой список."""
+        # Given: потребность в массе на понедельник, смена 1
+        mass_demand = {"BULK-CREAM-001": 1000.0}
+        monday = date(2026, 2, 16)  # Понедельник
+        assert monday.weekday() == 0  # Подстраховка
+
+        # When: планируем варки
+        result = self.service.plan_reactor_batches(mass_demand, monday, shift_num=1)
+
+        # Then: пустой список (CIP-блокировка)
+        assert result == []
+
+    def test_no_cip_monday_shift_2(self):
+        """CIP не блокирует смену 2 в понедельник."""
+        # Given: потребность на понедельник, но смена 2
+        mass_demand = {"BULK-CREAM-001": 1000.0}
+        monday = date(2026, 2, 16)
+
+        # When: планируем варки на смену 2
+        result = self.service.plan_reactor_batches(mass_demand, monday, shift_num=2)
+
+        # Then: варки запланированы (CIP не мешает)
+        assert len(result) > 0
+
+    def test_no_cip_tuesday_shift_1(self):
+        """CIP не блокирует смену 1 во вторник."""
+        # Given: потребность на вторник, смена 1
+        mass_demand = {"BULK-CREAM-001": 1000.0}
+        tuesday = date(2026, 2, 17)
+        assert tuesday.weekday() == 1
+
+        # When
+        result = self.service.plan_reactor_batches(mass_demand, tuesday, shift_num=1)
+
+        # Then: варки запланированы
+        assert len(result) > 0
+
+
+# ============================================================================
+# plan_reactor_batches Tests (integration with test_db)
+# ============================================================================
+
 
 def test_plan_reactor_batches_cip_monday_shift1(test_db):
     """Тест: CIP понедельник смена 1 → нет варок."""
