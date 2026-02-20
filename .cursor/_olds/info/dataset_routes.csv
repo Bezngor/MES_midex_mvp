@@ -1,8 +1,8 @@
-﻿product_code;route_key;operation_sequence;operation_name;work_center_name;norming_type;capacity_pcs_per_shift;capacity_pcs_per_shift_per_person;shift_minutes;marking_type;crew_size;min_crew_to_operate;crew_productivity_rule;crew_notes;estimated_duration_minutes
+product_code;route_key;operation_sequence;operation_name;work_center_name;norming_type;capacity_pcs_per_shift;capacity_pcs_per_shift_per_person;shift_minutes;marking_type;crew_size;min_crew_to_operate;crew_productivity_rule;crew_notes;estimated_duration_minutes
 00-000937;;1;Сборка/Упаковка;WC_SEMI_AUTO_VISCOUS;MANUAL_PER_PERSON;;1000;720;MANUAL_ONLY;1;1;;;
 00-000937;;2;Маркировка ЧЗ;WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_ONLY;1;1;;;
-00-000931;;1;Сборка/Упаковка;WC_TUBE_LINE_1;AUTO_SHIFT;15000;;720;AUTO_PRINTER;2;2;;Оператор + упаковщик. Одного нет — РЦ не работает, оставшийся в Резерв.;
-00-000931;;2;Маркировка ЧЗ (при сбое принтера);WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_FALLBACK;1;1;;;
+00-000968;;1;Сборка/Упаковка;WC_TUBE_LINE_1;AUTO_SHIFT;15000;;720;AUTO_PRINTER;2;2;;Оператор + упаковщик. Одного нет — РЦ не работает, оставшийся в Резерв.;
+00-000968;;2;Маркировка ЧЗ (при сбое принтера);WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_FALLBACK;1;1;;;
 00-000773;;1;Сборка/Упаковка;WC_TUBE_LINE_1;AUTO_SHIFT;15000;;720;AUTO_PRINTER;2;2;;Оператор + упаковщик. Одного нет — РЦ не работает, оставшийся в Резерв.;
 00-000773;;2;Маркировка ЧЗ (при сбое принтера);WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_FALLBACK;1;1;;;
 00-001586;;1;Сборка/Упаковка;WC_SEMI_AUTO_VISCOUS;MANUAL_PER_PERSON;;1000;720;MANUAL_ONLY;1;1;;;
@@ -81,3 +81,34 @@
 00-000939;;2;Маркировка ЧЗ (при сбое принтера);WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_FALLBACK;1;1;;;
 00-001413;;1;Сборка/Упаковка;WC_TUBE_LINE_2;AUTO_SHIFT;9000;;720;AUTO_PRINTER;2;2;;Оператор + упаковщик. Одного нет — РЦ не работает, оставшийся в Резерв.;
 00-001413;;2;Маркировка ЧЗ (при сбое принтера);WC_CHZ_MANUAL_AREA;MANUAL_PER_PERSON;;5000;720;MANUAL_FALLBACK;1;1;;;
+BULK_Масса_GECO_Гель_Увлажняющий_антибактериальный_после_бритья;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Гель_дезинфицирующий;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Жидкое_мыло;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Жидкое_мыло_антибактериальное;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Жидкое_мыло_антибактериальное_без_цвета_и_запаха;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Жидкое_мыло_для_бетона;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Крем_УФ;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_УФМороз;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_гидрофильный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_гидрофобный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_для_защиты_от_укусов_комаров;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_для_очистки_без_воды;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_мороз;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_регенерирующий;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_универсальный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_гель_для_очистки;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Крем_гель_после_укусов_с_охлаждающим_эффектом;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Паста;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Паста_от_красителей;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_Спрей_защитный_от_клещей_3в1;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Спрей_от_пота_антибактериальный;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Спрей_репелент;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_Средство_для_очистки_без_абразива;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_GECO_средство_дезинфицирующее;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_средство_дезинфицирующее_40;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_GECO_средство_дезинфицирующее_60;;1;Смешивание массы;WC_MIXER;;;;720;;1;1;;;180
+BULK_Масса_СЕВЕРЯНИН_Крем_гидрофильный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_СЕВЕРЯНИН_Крем_гидрофобный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_СЕВЕРЯНИН_Крем_регенерирующий;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_СЕВЕРЯНИН_Крем_универсальный;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240
+BULK_Масса_СЕВЕРЯНИН_Паста;;1;Варка массы;WC_REACTOR_MAIN;;;;720;;1;1;;;240

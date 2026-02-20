@@ -1,0 +1,15 @@
+---
+name: 055-strategic-planning-timeline-verification
+description: Verification of timeline distribution and Gantt logic for Strategic Planning
+globs:
+  - "backend/core/services/strategic_planning_service.py"
+  - "frontend/src/components/scheduling/GanttChart.tsx"
+  - ".cursor/docs/TIMELINE_DISTRIBUTION_CHECKLIST.md"
+alwaysApply: false
+---
+
+# Strategic Planning — Timeline and Gantt Verification
+
+- When the user asks to **check correctness of order distribution on the timeline**, **validate calculations**, or **verify Gantt / planning logic**, use the **checklist** in `.cursor/docs/TIMELINE_DISTRIBUTION_CHECKLIST.md`.
+- Go through the relevant checklist sections (duration, overlaps, cross-shift splits, general), compare with the code in `backend/core/services/strategic_planning_service.py` and data/UI as needed, and report any discrepancies or confirm compliance.
+- When adding or changing logic that affects planning (durations, shift boundaries, slot finding, splitting across shifts), consider updating the checklist and re-verifying affected items.

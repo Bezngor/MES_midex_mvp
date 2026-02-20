@@ -174,14 +174,48 @@ export interface OrderChangeDetailResponse {
   data: OrderChangeInfo | null;
 }
 
+/** Детали по одному недостающему компоненту в ошибке резервирования */
+export interface ReservationMissingDetail {
+  component_id: string;
+  component_name: string;
+  required_qty: number;
+  available_qty: number;
+  deficit_qty: number;
+}
+
 /**
  * Strategic Planning types
  */
+export interface MassValidationError {
+  mass_product_id: string;
+  mass_product_name: string;
+  order_id: string;
+  order_number: string;
+  reason: string;
+}
+
+export interface MassPlanningInfo {
+  mass_product_id: string;
+  mass_product_name: string;
+  order_id: string;
+  order_number: string;
+  required_qty: number;
+  available_qty: number;
+  needs_production: boolean;
+  has_route: boolean;
+  has_operations: boolean;
+  route_id: string | null;
+  operations_count: number;
+}
+
 export interface StrategicPlanningResponse {
   reserved_orders: string[]; // Заказы с успешно зарезервированными компонентами
   failed_orders: Array<{
     order_id: string;
+    order_number?: string;
+    order_product_name?: string;
     missing_components: Record<string, number>; // {product_id: недостающее_количество}
+    missing_details?: ReservationMissingDetail[];
   }>;
   planned_operations: Array<{
     order_id: string;
@@ -191,4 +225,6 @@ export interface StrategicPlanningResponse {
     scheduled_end: string;
     quantity: number;
   }>;
+  mass_validation_errors?: MassValidationError[]; // Ошибки валидации маршрутов масс
+  mass_planning_info?: MassPlanningInfo[]; // Информация о массах для анализа отсутствия задач на Реакторе
 }

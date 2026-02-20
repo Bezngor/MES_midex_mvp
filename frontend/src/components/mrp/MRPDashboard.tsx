@@ -16,6 +16,13 @@ import type { MRPConsolidation } from '../../services/types';
 const PRIORITIES = ['URGENT', 'HIGH', 'NORMAL', 'LOW'] as const;
 type PriorityKey = (typeof PRIORITIES)[number];
 
+const PRIORITY_LABELS: Record<PriorityKey, string> = {
+  URGENT: 'Срочно',
+  HIGH: 'Высокий',
+  NORMAL: 'Обычный',
+  LOW: 'Низкий',
+};
+
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -175,7 +182,7 @@ export const MRPDashboard: React.FC = () => {
                 : 'bg-gray-200 text-gray-500'
             }`}
           >
-            {p} {visibleColumns[p] ? '✓' : ''}
+            {PRIORITY_LABELS[p]} {visibleColumns[p] ? '✓' : ''}
           </button>
         ))}
       </div>
@@ -186,16 +193,16 @@ export const MRPDashboard: React.FC = () => {
             <tr>
               <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Продукт</th>
               {visibleColumns.URGENT && (
-                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">URGENT</th>
+                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">{PRIORITY_LABELS.URGENT}</th>
               )}
               {visibleColumns.HIGH && (
-                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">HIGH</th>
+                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">{PRIORITY_LABELS.HIGH}</th>
               )}
               {visibleColumns.NORMAL && (
-                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">NORMAL</th>
+                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">{PRIORITY_LABELS.NORMAL}</th>
               )}
               {visibleColumns.LOW && (
-                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">LOW</th>
+                <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">{PRIORITY_LABELS.LOW}</th>
               )}
               <th className="border border-gray-300 p-2 text-right text-gray-800 font-semibold">ИТОГО</th>
               <th className="border border-gray-300 p-2 text-left text-gray-800 font-semibold">Крайний срок</th>

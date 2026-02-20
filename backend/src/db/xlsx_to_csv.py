@@ -113,11 +113,16 @@ def _map_rules_row(row: dict) -> dict:
 
 
 def _inventory_headers() -> list[str]:
-    return ["product_code", "location", "quantity", "product_status", "reserved_quantity"]
+    # Добавляем product_name, чтобы затем можно было маппить остатки по наименованию продукта,
+    # даже если коды (product_code) отличаются между датасетами.
+    return ["product_code", "product_name", "location", "quantity", "product_status", "reserved_quantity"]
 
 
 def _map_inventory_row(row: dict) -> dict:
     """Маппинг из xlsx в колонки для загрузки остатков."""
+    product_name = _get_val_any_key(
+        row, "product_name", "Наименование", "product name", "наименование продукта"
+    )
     product_code = _get_val_any_key(
         row, "product_code", "Код", "product code", "код продукта", "product_code"
     )
@@ -135,6 +140,7 @@ def _map_inventory_row(row: dict) -> dict:
     )
     return {
         "product_code": product_code,
+        "product_name": product_name,
         "location": location,
         "quantity": quantity or "0",
         "product_status": product_status or "FINISHED",

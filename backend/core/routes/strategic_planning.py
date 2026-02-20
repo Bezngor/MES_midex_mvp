@@ -21,6 +21,26 @@ class RecalculatePlanRequest(BaseModel):
 
 
 @router.post(
+    "/reset-plan",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Сбросить план и резервы",
+    description="Обнуляет все резервы остатков и удаляет запланированные задачи (QUEUED). Возвращает к начальному состоянию для пересчёта плана.",
+)
+async def reset_plan_and_reservations(db: Session = Depends(get_db)):
+    """Сброс резервов и Ганта к начальному состоянию."""
+    service = StrategicPlanningService(db)
+    try:
+        result = service.reset_plan_and_reservations()
+        return {"success": True, "data": result}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при сбросе: {str(e)}",
+        )
+
+
+@router.post(
     "/recalculate-plan",
     response_model=dict,
     status_code=status.HTTP_200_OK,

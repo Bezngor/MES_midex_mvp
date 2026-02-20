@@ -22,6 +22,9 @@ todos:
   - id: ui-strategic-tactical-planning
     content: "ОБЯЗАТЕЛЬНО: UI для реализации концепций Стратегического и Тактического планирования (ключевой алгоритм MES). Включает бэклог по DSIZ Planning, DSIZ Shift Actualize, DSIZ Master Data и UI заказов. См. MANUAL_E2E_TEST_REPORT.md, раздел 4. Соответствует бизнес-процессу (BUSINESS_PROCESS_REFERENCE.md)."
     status: pending
+  - id: strategy-tab-mrp-order-views-frozen-zone
+    content: "Объединение MRP‑вида и позаказного вида на вкладке 'Стратегия' + реализация Frozen Zone и версий плана (PlanVersion). Спецификация: STRATEGY_TAB_UX_AND_FROZEN_ZONE.md. Парадигма C — Разделённое мастерство."
+    status: pending
   - id: identify-new-changed-orders
     content: "Выявление новых и/или изменённых ЗП (0.8): Backend сервис OrderComparisonService, API endpoints для списка изменений, Frontend компоненты OrderChangesList и OrderChangesDetail. Начало реализации бизнес-процесса."
     status: completed
@@ -267,6 +270,84 @@ todos:
 - **UI заказов:** вкладка «Заказы» (или аналог) с созданием и просмотром производственных заказов, связь с MRP, расписанием и DSIZ Shift Actualize.
 
 **Задача в todos:** `ui-strategic-tactical-planning`.
+
+---
+
+### 0.7.1 Объединение MRP‑вида и позаказного вида на вкладке "Стратегия" + Frozen Zone
+
+**Статус:** Следующий этап разработки (после завершения прототипа вкладки "Стратегия").  
+**Спецификация:** `.cursor/docs/STRATEGY_TAB_UX_AND_FROZEN_ZONE.md`.  
+**Парадигма:** Парадигма C — Разделённое мастерство (ERP master по бизнес‑плану, MES master по операции).
+
+**Цель:** Реализовать полноценную вкладку "Стратегия" с двумя режимами представления (MRP‑консолидация по продуктам и позаказный просмотр) и механизмом frozen zone для защиты утверждённого плана от автоматических пересчётов.
+
+**Задачи:**
+
+#### 0.7.1.1 Backend — PlanVersion и Frozen Zone
+- [ ] Создать миграцию для таблицы `plan_versions` (UUID, name, status, horizon_start/end, frozen_until, scenario_type, input_parameters JSONB)
+- [ ] Добавить поля в существующие таблицы:
+  - `manufacturing_orders`: `plan_version_id`, `planning_status` (enum)
+  - `batches`: `plan_version_id`, `planning_state` (enum), `frozen_from`
+  - `production_tasks`: `plan_version_id`, `planning_state` (enum)
+- [ ] Реализовать сервис `PlanVersionService`:
+  - `create_draft_version(parameters)` — создание черновика
+  - `activate_version(version_id)` — активация версии (с архивированием предыдущей)
+  - `get_active_version()` — получение активной версии
+  - `get_frozen_tasks(version_id)` — получение замороженных задач
+  - `check_conflicts(new_orders, active_version)` — проверка конфликтов с frozen zone
+- [ ] Обновить `StrategicPlanningService` для учёта frozen zone:
+  - При пересчёте копировать FROZEN‑задачи/партии из активной версии
+  - Пересчитывать только задачи вне frozen zone (`scheduled_start >= frozen_until`)
+  - Создавать связи с `PlanVersion` для новых задач/партий
+- [ ] Написать автотесты для `PlanVersionService` и frozen zone логики
+
+#### 0.7.1.2 Frontend — UX вкладки "Стратегия" (объединение режимов)
+- [ ] Реализовать переключатель режимов представления:
+  - Радио‑переключатель или табы: `По продуктам (MRP)` / `По заказам`
+  - Сохранение выбранного режима в URL/сторе
+- [ ] Создать компонент `MRPConsolidationTable.tsx`:
+  - Таблица консолидации по ГП (колонки: Продукт, Срочно, Высокий, Обычный, Низкий, ИТОГО, Крайний срок, Источник заказов, Включить в план)
+  - Интерактивность: чекбоксы "Включить в план", клик на "Источник заказов" → модальное окно/сайдбар со списком заказов
+  - Подсветка строк с новыми/изменёнными заказами
+  - Подсказка внизу: "В план войдут X продуктов, Y заказов, Z тонн/шт"
+- [ ] Расширить `OrderListTable.tsx` для позаказного вида:
+  - Блок "Номера заказов и действия" (слева) с множественным выбором
+  - Основная таблица заказов с колонками: Номер заказа, ГП, Количество, Дата выполнения, Приоритет, Тип изменения, Включён в план, Детали
+  - Фильтры: тип заказа (Новые/Изменённые/Все), флаг "Показывать только включённые"
+- [ ] Интегрировать оба режима в `StrategicPlanningPage.tsx`:
+  - Общий сценарий выбора заказов (сохраняется при переключении режимов)
+  - Блок "Результаты пересчёта и принятие плана" (появляется после расчёта)
+  - Карточки‑сводки: всего ГП, загрузка ресурсов, количество заказов вне frozen zone
+  - Кнопки: "Принять план", "Отклонить расчёт", "Сохранить как сценарий 'что‑если'"
+- [ ] Добавить компоненты:
+  - `PlanVersionSelector.tsx` — выбор версии плана
+  - `FrozenZoneIndicator.tsx` — индикатор frozen zone на Гантте
+  - `PlanConflictWarning.tsx` — предупреждение о конфликтах при обновлениях из 1С
+
+#### 0.7.1.3 Интеграция и тестирование
+- [ ] Интеграция frozen zone с алгоритмом планирования DSIZ
+- [ ] Тестирование workflow принятия плана (DRAFT → ACTIVE → ARCHIVED)
+- [ ] Тестирование конфликтов при обновлениях из 1С (заказ отменён, но задачи в frozen zone)
+- [ ] Ручное тестирование полного flow:
+  - Обновление заказов → выбор режима → фильтрация → расчёт → анализ → принятие
+- [ ] Обновить документацию (`CUSTOM_TABS_DEVELOPMENT.md`, `BUSINESS_PROCESS_REFERENCE.md`)
+
+**Критерии готовности:**
+- [ ] Таблица `plan_versions` создана и миграции применены
+- [ ] Frozen zone работает корректно (задачи в frozen zone не пересчитываются автоматически)
+- [ ] Оба режима представления (MRP / позаказный) работают и синхронизированы
+- [ ] Workflow принятия плана работает (DRAFT → ACTIVE)
+- [ ] Конфликты с frozen zone корректно отображаются в UI
+- [ ] Автотесты пройдены (coverage для новых сервисов ≥ 90%)
+- [ ] Ручное тестирование завершено успешно
+
+**Файлы для работы:**
+- `backend/src/models/plan_version.py` — модель PlanVersion
+- `backend/src/services/plan_version_service.py` — сервис управления версиями
+- `backend/core/services/strategic_planning_service.py` — обновление для frozen zone
+- `frontend/src/components/strategic/MRPConsolidationTable.tsx` — новый компонент
+- `frontend/src/components/strategic/OrderListTable.tsx` — расширение существующего
+- `frontend/src/pages/StrategicPlanningPage.tsx` — интеграция обоих режимов
 
 ---
 

@@ -8,9 +8,16 @@ import { getWorkCenterDisplayName, sortWorkCentersByOrder } from '../../utils/wo
 import { Loading } from '../common/Loading';
 import { Error } from '../common/Error';
 
-export const GanttChart: React.FC = () => {
+interface GanttChartProps {
+  /** При изменении значения данные Гант-диаграммы перезапрашиваются (например, после пересчёта плана). */
+  refreshTrigger?: number;
+  /** Количество дней по умолчанию (на вкладке «Стратегия» лучше 14+, т.к. план привязан к срокам заказов). */
+  defaultDays?: number;
+}
+
+export const GanttChart: React.FC<GanttChartProps> = ({ refreshTrigger = 0, defaultDays = 7 }) => {
   const { ganttData, loading, error, fetchGanttData } = useScheduleStore();
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(defaultDays);
 
   useEffect(() => {
     const start = new Date();
@@ -18,7 +25,7 @@ export const GanttChart: React.FC = () => {
     const end = new Date(start.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
     end.setHours(23, 59, 59, 999);
     fetchGanttData(start.toISOString(), end.toISOString());
-  }, [days, fetchGanttData]);
+  }, [days, fetchGanttData, refreshTrigger]);
 
   if (loading) return <Loading message="Загрузка расписания..." />;
   if (error) return <Error message={error} onRetry={() => {
@@ -64,10 +71,51 @@ export const GanttChart: React.FC = () => {
     }
   };
 
+  /** Границы смен в UTC: Смена1 08:00–20:00, Смена2 20:00–08:00. Дата в подсказке — всегда дата начала смены. */
+  const getShiftDisplayDate = (taskStart: Date): Date => {
+    const h = taskStart.getUTCHours();
+    const m = taskStart.getUTCMinutes();
+    const dayStart = new Date(Date.UTC(
+      taskStart.getUTCFullYear(),
+      taskStart.getUTCMonth(),
+      taskStart.getUTCDate(),
+    ));
+    if (h < 8) {
+      dayStart.setUTCDate(dayStart.getUTCDate() - 1);
+    }
+    return dayStart;
+  };
+
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+
+  const formatGanttTooltip = (
+    productName: string,
+    quantityDisplay: string | null | undefined,
+    taskStart: string,
+    taskEnd: string,
+  ): string => {
+    const start = new Date(taskStart);
+    const end = new Date(taskEnd);
+    const shiftDate = getShiftDisplayDate(start);
+    const dateStr = `${pad2(shiftDate.getUTCDate())}-${pad2(shiftDate.getUTCMonth() + 1)}-${shiftDate.getUTCFullYear()}`;
+    const timeStart = `${pad2(start.getUTCHours())}:${pad2(start.getUTCMinutes())}`;
+    const timeEnd = `${pad2(end.getUTCHours())}:${pad2(end.getUTCMinutes())}`;
+    const quantityPart = quantityDisplay ? ` - ${quantityDisplay}` : '';
+    return `${productName}${quantityPart} (${dateStr} ${timeStart}-${timeEnd})`;
+  };
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-gray-800">Расписание производства (Gantt)</h3>
+        <div>
+          <h3 className="text-xl font-bold text-gray-800">Расписание производства (Gantt)</h3>
+          <p className="text-xs text-gray-500 mt-1">
+            Цвета задач: <span className="inline-block w-3 h-3 bg-red-500 rounded mr-1"></span> Срочно —{' '}
+            <span className="inline-block w-3 h-3 bg-orange-500 rounded mr-1"></span> Высокий —{' '}
+            <span className="inline-block w-3 h-3 bg-blue-500 rounded mr-1"></span> Обычный —{' '}
+            <span className="inline-block w-3 h-3 bg-gray-500 rounded mr-1"></span> Низкий
+          </p>
+        </div>
         <select
           className="border rounded px-3 py-2"
           value={days}
@@ -103,15 +151,20 @@ export const GanttChart: React.FC = () => {
               <div className="relative h-20 bg-gray-50 rounded">
                 {wc.tasks.map((task) => {
                   const position = getTaskPosition(task.start, task.end);
+                  const tooltipProductName = task.product_name || task.name;
+                  const tooltip = formatGanttTooltip(
+                    tooltipProductName,
+                    task.quantity_display ?? null,
+                    task.start,
+                    task.end,
+                  );
                   return (
                     <div
                       key={task.id}
                       className={`absolute ${getPriorityColor(task.priority)} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80`}
                       style={{ left: position.left, width: position.width, top: '10px', height: '30px' }}
-                      title={`${task.name} (${task.start} - ${task.end})`}
-                    >
-                      <div className="truncate">{task.name}</div>
-                    </div>
+                      title={tooltip}
+                    />
                   );
                 })}
               </div>

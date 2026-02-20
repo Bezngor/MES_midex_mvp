@@ -269,6 +269,10 @@ export const ordersAPI = {
   recalculatePlan: async (orderIds: string[]): Promise<ApiResponse<StrategicPlanningResponse>> => {
     return api.post('/strategic-planning/recalculate-plan', { order_ids: orderIds });
   },
+  /** Сбросить план и резервы (обнулить резервы, удалить запланированные задачи QUEUED) */
+  resetPlan: async (): Promise<ApiResponse<{ tasks_deleted: number; reserves_cleared: number }>> => {
+    return api.post('/strategic-planning/reset-plan');
+  },
 };
 
 // =====================

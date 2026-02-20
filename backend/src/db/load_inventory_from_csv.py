@@ -39,6 +39,7 @@ DEFAULT_CSV = repo_root / ".cursor" / "_olds" / "info" / "inventory.csv"
 
 # Допустимые имена колонок (по первому совпадению)
 COL_PRODUCT_CODE = ["product_code", "Код", "product code", "код продукта"]
+COL_PRODUCT_NAME = ["product_name", "Наименование", "наименование", "product name", "product_name"]
 COL_PRODUCT_ID = ["product_id", "id", "uuid"]
 COL_LOCATION = ["location", "Локация", "локация", "Location"]
 COL_QUANTITY = ["quantity", "Количество", "количество", "Quantity", "qty"]
@@ -112,6 +113,7 @@ def main() -> None:
         return None
 
     product_code_col = col(COL_PRODUCT_CODE)
+    product_name_col = col(COL_PRODUCT_NAME)
     product_id_col = col(COL_PRODUCT_ID)
     location_col = col(COL_LOCATION)
     quantity_col = col(COL_QUANTITY)
@@ -121,8 +123,8 @@ def main() -> None:
     if not location_col or not quantity_col:
         print("Ошибка: в CSV должны быть колонки location (Локация) и quantity (Количество).")
         sys.exit(1)
-    if not product_code_col and not product_id_col:
-        print("Ошибка: в CSV должна быть колонка product_code (Код) или product_id.")
+    if not product_code_col and not product_id_col and not product_name_col:
+        print("Ошибка: в CSV должна быть колонка product_code (Код), product_name (Наименование) или product_id.")
         sys.exit(1)
 
     db: Session = SessionLocal()
@@ -134,6 +136,7 @@ def main() -> None:
 
         for i, row in enumerate(rows):
             product_code = _norm(row.get(product_code_col, "")) if product_code_col else ""
+            product_name = _norm(row.get(product_name_col, "")) if product_name_col else ""
             product_id_str = _norm(row.get(product_id_col, "")) if product_id_col else ""
             location = _norm(row.get(location_col, ""))
             qty_val = _parse_float(_norm(row.get(quantity_col, "")))
@@ -144,11 +147,14 @@ def main() -> None:
                 skipped += 1
                 continue
 
-            # Определить product_id
+            # Определить product_id: по UUID из CSV только если такой продукт есть в БД,
+            # иначе — по product_code (чтобы старый CSV работал после prepare_test_env с новыми UUID).
             product_id = None
             if product_id_str:
                 try:
-                    product_id = uuid.UUID(product_id_str)
+                    uid = uuid.UUID(product_id_str)
+                    if db.get(Product, uid) is not None:
+                        product_id = uid
                 except ValueError:
                     pass
             if not product_id and product_code:
@@ -156,8 +162,17 @@ def main() -> None:
                 res = db.execute(stmt).scalar_one_or_none()
                 if res is not None:
                     product_id = res
+            # Фолбэк по наименованию продукта (важно для связки dataset_customer_orders + inventory.xlsx):
+            # если коды отличаются, но наименование совпадает.
+            if not product_id and product_name:
+                stmt = select(Product.id).where(Product.product_name == product_name).limit(1)
+                res = db.execute(stmt).scalar_one_or_none()
+                if res is not None:
+                    product_id = res
             if not product_id:
-                errors.append(f"Строка {i + 2}: продукт не найден (code={product_code!r}, id={product_id_str!r})")
+                errors.append(
+                    f"Строка {i + 2}: продукт не найден (name={product_name!r}, code={product_code!r}, id={product_id_str!r})"
+                )
                 skipped += 1
                 continue
 
@@ -205,7 +220,13 @@ def main() -> None:
             sys.exit(0)
 
         db.commit()
-        print(f"Остатки загружены: создано {created}, обновлено {updated}, пропущено {skipped}.")
+        print(f"Остатки загружены: создано {created}, обновлено {updated}, пропущено: {skipped}.")
+        if skipped > 0:
+            print(
+                "Пропущенные строки — продукт не найден в БД (нет ни по UUID, ни по коду). "
+                "Это нормально, если CSV содержит больше продуктов, чем создано в prepare_test_env. "
+                "Чтобы загружать только существующие продукты, используйте export_products_for_inventory после prepare_test_env, заполните количество и загрузите получившийся CSV."
+            )
     except Exception as e:
         db.rollback()
         print(f"Ошибка: {e}")

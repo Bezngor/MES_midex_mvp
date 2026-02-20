@@ -36,6 +36,8 @@ DEFAULT_ROUTES_XLSX = repo_root / ".cursor" / "_olds" / "info" / "dataset_routes
 DEFAULT_RULES_XLSX = repo_root / ".cursor" / "_olds" / "info" / "product_routing_rules.xlsx"
 DEFAULT_ROUTES_CSV = repo_root / ".cursor" / "_olds" / "info" / "dataset_routes.csv"
 DEFAULT_RULES_CSV = repo_root / ".cursor" / "_olds" / "info" / "product_routing_rules.csv"
+DEFAULT_INVENTORY_XLSX = repo_root / ".cursor" / "_olds" / "info" / "inventory.xlsx"
+DEFAULT_INVENTORY_CSV = repo_root / ".cursor" / "_olds" / "info" / "inventory.csv"
 
 
 def main() -> None:
@@ -43,6 +45,7 @@ def main() -> None:
     from backend.src.db.seed_work_centers_and_routes import seed_work_centers
     from backend.src.db.load_routes_from_csv import load_routes_and_rules
     from backend.src.db.session import SessionLocal
+    import subprocess
 
     orders_path = DEFAULT_ORDERS
     bom_path = DEFAULT_BOM
@@ -108,8 +111,43 @@ def main() -> None:
     finally:
         db.close()
 
+    # Шаг 5: Остатки — inventory.xlsx → CSV → загрузка в БД
+    print("\n=== 5. Остатки (inventory.xlsx → inventory.csv → загрузка) ===")
+    if DEFAULT_INVENTORY_XLSX.exists():
+        try:
+            from backend.src.db.xlsx_to_csv import convert_inventory
+
+            print(f"Конвертация остатков из {DEFAULT_INVENTORY_XLSX} → {DEFAULT_INVENTORY_CSV} ...")
+            n_inv = convert_inventory(DEFAULT_INVENTORY_XLSX, DEFAULT_INVENTORY_CSV)
+            print(f"Остатки (строк): {n_inv} -> {DEFAULT_INVENTORY_CSV}")
+        except ModuleNotFoundError as e:
+            # openpyxl не установлен — не можем прочитать xlsx
+            if "openpyxl" in str(e):
+                print(
+                    "(Модуль openpyxl не установлен — конвертация inventory.xlsx пропущена. "
+                    "Установите openpyxl или подготовьте inventory.csv вручную.)"
+                )
+            else:
+                raise
+        except Exception as e:
+            print(f"Предупреждение: конвертация остатков из inventory.xlsx не выполнена: {e}. "
+                  f"Можно загрузить остатки вручную через load_inventory_from_csv.")
+        else:
+            # Запускаем загрузку CSV остатков отдельной командой, чтобы переиспользовать существующий скрипт
+            try:
+                print("Загрузка остатков из CSV в БД ...")
+                subprocess.run(
+                    [sys.executable, "-m", "backend.src.db.load_inventory_from_csv", "-f", str(DEFAULT_INVENTORY_CSV)],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                print(f"Ошибка при загрузке остатков из CSV: {e}")
+                sys.exit(1)
+    else:
+        print(f"Файл остатков не найден ({DEFAULT_INVENTORY_XLSX}), шаг 5 пропущен.")
+
     print("\n" + "=" * 60)
-    print("Готово. Тестовое окружение подготовлено.")
+    print("Готово. Тестовое окружение подготовлено (заказы + BOM + маршруты/правила + остатки при наличии inventory.xlsx).")
     print("")
     print("Далее ОБЯЗАТЕЛЬНО:")
     print("  1. Перезапустите backend (остановите uvicorn/Docker и запустите снова).")

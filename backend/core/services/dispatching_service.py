@@ -674,6 +674,22 @@ class DispatchingService:
                 elif task.manufacturing_order:
                     task_name = f"Производство {task.manufacturing_order.order_number}"
 
+                product_name = None
+                quantity_display = None
+                if task.manufacturing_order:
+                    try:
+                        prod = self.db.get(Product, UUID(task.manufacturing_order.product_id))
+                        product_name = (prod.product_name or prod.product_code) if prod else None
+                    except (ValueError, TypeError, AttributeError):
+                        pass
+                    if task.quantity_pcs is not None:
+                        quantity_display = f"{int(task.quantity_pcs)} шт"
+                    elif task.quantity_kg is not None:
+                        quantity_display = f"{float(task.quantity_kg)} кг"
+                    elif task.manufacturing_order.quantity is not None:
+                        q = float(task.manufacturing_order.quantity)
+                        quantity_display = f"{int(q)} шт" if q == int(q) else f"{q} кг"
+
                 priority = "NORMAL"
                 if task.manufacturing_order and task.manufacturing_order.priority:
                     priority = task.manufacturing_order.priority
@@ -689,6 +705,8 @@ class DispatchingService:
                 task_data.append({
                     "id": task.id,
                     "name": task_name,
+                    "product_name": product_name,
+                    "quantity_display": quantity_display,
                     "start": start,
                     "end": end,
                     "priority": priority,

@@ -19,6 +19,7 @@ from backend.core.schemas.manufacturing_order import (
 )
 from backend.core.services.order_service import OrderService
 from backend.core.services.order_comparison_service import OrderComparisonService
+from backend.core.priority_utils import compute_order_priority
 from backend.core.schemas.order_changes import (
     OrderChangesListResponse,
     OrderChangeDetailResponse,
@@ -181,7 +182,7 @@ async def get_order_changes(
                 product_name=info.get("name"),
                 quantity=order.quantity,
                 due_date=order.due_date,
-                priority=order.priority,
+                priority=compute_order_priority(order.due_date, order.source_status),
                 is_new=True,
                 is_changed=False,
                 is_deleted=False,
@@ -201,7 +202,7 @@ async def get_order_changes(
                 product_name=info.get("name"),
                 quantity=order.quantity,
                 due_date=order.due_date,
-                priority=order.priority,
+                priority=compute_order_priority(order.due_date, order.source_status),
                 is_new=False,
                 is_changed=True,
                 is_deleted=False,
@@ -223,7 +224,7 @@ async def get_order_changes(
                 product_name=info.get("name"),
                 quantity=snapshot.quantity,
                 due_date=snapshot.due_date,
-                priority=snapshot.priority,
+                priority=compute_order_priority(snapshot.due_date, snapshot.source_status),
                 is_new=False,
                 is_changed=False,
                 is_deleted=True,
@@ -296,10 +297,11 @@ async def get_order_change_details(
             detail="Order not found or has no changes",
         )
 
-    # Дополняем change_info полями, обязательными для OrderChangeInfo
+    # Дополняем change_info полями, обязательными для OrderChangeInfo (приоритет по правилам MRP)
     order = db.get(ManufacturingOrder, order_id)
     if order:
         change_info.setdefault("product_id", str(order.product_id))
+        change_info["priority"] = compute_order_priority(order.due_date, order.source_status)
         product = db.query(Product).filter(Product.id == UUID(str(order.product_id))).first()
         if product:
             change_info["product_name"] = product.product_name

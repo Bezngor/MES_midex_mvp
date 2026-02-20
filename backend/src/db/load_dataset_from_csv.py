@@ -101,14 +101,10 @@ def normalize_source_status(status: str) -> str:
     return s
 
 
-def status_to_priority(status: str) -> str:
-    """При загрузке: Отгрузить/Образец -> HIGH, В работе -> NORMAL (для MRP приоритет считается по source_status и дате)."""
-    s = (status or "").strip().lower()
-    if "работе" in s or "в работе" in s:
-        return OrderPriority.NORMAL.value
-    if "отгрузить" in s or "образец" in s:
-        return OrderPriority.HIGH.value
-    return OrderPriority.HIGH.value
+def _priority_at_load(due_date, source_status: str) -> str:
+    """При загрузке приоритет по тем же правилам, что и в MRP (due_date + source_status)."""
+    from backend.core.priority_utils import compute_order_priority
+    return compute_order_priority(due_date, source_status)
 
 
 def slug_code(name: str, prefix: str = "") -> str:
@@ -136,7 +132,7 @@ def load_orders_csv(path: Path) -> list[dict]:
             row["due_date"] = parse_russian_date(row.get("Дата отгрузки", ""))
             raw_status = (row.get("Статус заказа") or "").strip()
             row["source_status"] = normalize_source_status(raw_status)
-            row["priority"] = status_to_priority(raw_status)
+            row["priority"] = _priority_at_load(row.get("due_date"), row.get("source_status", ""))
             rows.append(row)
     return rows
 
@@ -386,7 +382,7 @@ def run(
                 n += 1
                 order_number = f"{base}-{n}"
             order_numbers_seen.add(order_number)
-            priority = r.get("priority") or OrderPriority.NORMAL.value
+            priority = r.get("priority") or _priority_at_load(r.get("due_date"), r.get("source_status", ""))
             order = ManufacturingOrder(
                 order_number=order_number,
                 product_id=str(pid),

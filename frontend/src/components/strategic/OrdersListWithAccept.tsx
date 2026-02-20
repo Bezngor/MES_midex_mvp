@@ -7,15 +7,25 @@ import React from 'react';
 import type { OrderChangeInfo } from '../../types/api';
 import type { Priority } from './PriorityFilters';
 
+/** Нормализует UUID к 32 символам hex для сравнения (то же правило, что на странице Стратегия). */
+function normalizeOrderIdForMatch(id: string | null | undefined): string {
+  if (id == null || typeof id !== 'string') return '';
+  const s = String(id).trim().toLowerCase().replace(/-/g, '');
+  return /^[0-9a-f]{32}$/.test(s) ? s : String(id).trim().toLowerCase();
+}
+
 interface OrdersListWithAcceptProps {
   orders: OrderChangeInfo[];
   acceptedOrderIds: Set<string>;
   onAccept: (orderId: string) => void;
   onCancel: (orderId: string) => void;
   title: string;
+  getOrderNumber?: (order: OrderChangeInfo) => string;
   getPriority?: (order: OrderChangeInfo) => Priority;
   getQuantity?: (order: OrderChangeInfo) => number | string;
   getDueDate?: (order: OrderChangeInfo) => string | null;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
@@ -24,9 +34,12 @@ export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
   onAccept,
   onCancel,
   title,
+  getOrderNumber,
   getPriority,
   getQuantity,
   getDueDate,
+  collapsed = false,
+  onToggleCollapse,
 }) => {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '-';
@@ -79,13 +92,27 @@ export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+            title={collapsed ? 'Развернуть' : 'Свернуть'}
+          >
+            {collapsed ? '▶' : '▼'}
+          </button>
+        )}
       </div>
-      <div className="overflow-x-auto">
+      {!collapsed && (
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Номер заказа
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 ГП (Продукт)
               </th>
@@ -106,7 +133,10 @@ export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {orders.map((order) => {
               const orderId = order.order_id || order.order_number;
-              const isAccepted = acceptedOrderIds.has(orderId);
+              const normalizedId = normalizeOrderIdForMatch(order.order_id);
+              const isAccepted =
+                acceptedOrderIds.has(orderId) ||
+                (normalizedId.length > 0 && acceptedOrderIds.has(normalizedId));
               const priority = getPriority ? getPriority(order) : undefined;
               const quantity = getQuantity ? getQuantity(order) : '-';
               const dueDate = getDueDate ? getDueDate(order) : null;
@@ -118,6 +148,9 @@ export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
                     isAccepted ? 'bg-green-50' : ''
                   }`}
                 >
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {getOrderNumber ? getOrderNumber(order) : order.order_number ?? '-'}
+                  </td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">
                     {order.product_name || order.product_id}
                   </td>
@@ -157,6 +190,7 @@ export const OrdersListWithAccept: React.FC<OrdersListWithAcceptProps> = ({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };

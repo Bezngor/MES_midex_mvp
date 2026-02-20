@@ -12,7 +12,10 @@ interface ChangedOrdersListProps {
   acceptedOrderIds: Set<string>;
   onAccept: (orderId: string) => void;
   onCancel: (orderId: string) => void;
+  getOrderNumber?: (order: OrderChangeInfo) => string;
   getPriority?: (order: OrderChangeInfo) => Priority | undefined;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export const ChangedOrdersList: React.FC<ChangedOrdersListProps> = ({
@@ -20,7 +23,10 @@ export const ChangedOrdersList: React.FC<ChangedOrdersListProps> = ({
   acceptedOrderIds,
   onAccept,
   onCancel,
+  getOrderNumber,
   getPriority,
+  collapsed = false,
+  onToggleCollapse,
 }) => {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '-';
@@ -91,13 +97,27 @@ export const ChangedOrdersList: React.FC<ChangedOrdersListProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-800">Изменённые заказы</h3>
+        {onToggleCollapse && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="text-gray-500 hover:text-gray-700 text-sm"
+            title={collapsed ? 'Развернуть' : 'Свернуть'}
+          >
+            {collapsed ? '▶' : '▼'}
+          </button>
+        )}
       </div>
-      <div className="overflow-x-auto">
+      {!collapsed && (
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Номер заказа
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 ГП (Продукт)
               </th>
@@ -126,6 +146,9 @@ export const ChangedOrdersList: React.FC<ChangedOrdersListProps> = ({
                     isAccepted ? 'bg-green-50' : ''
                   }`}
                 >
+                  <td className="px-4 py-3 text-sm text-gray-700">
+                    {getOrderNumber ? getOrderNumber(order) : order.order_number ?? '-'}
+                  </td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">
                     {order.product_name || order.product_id}
                   </td>
@@ -183,6 +206,7 @@ export const ChangedOrdersList: React.FC<ChangedOrdersListProps> = ({
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 };

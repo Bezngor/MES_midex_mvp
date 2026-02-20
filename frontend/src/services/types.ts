@@ -170,6 +170,10 @@ export interface GanttData {
     tasks: {
       id: string;
       name: string;
+      /** Наименование продукта заказа (ГП) для подсказки на Ганте */
+      product_name?: string | null;
+      /** Количество для подсказки, например "2500 шт" или "100.5 кг" */
+      quantity_display?: string | null;
       start: string;
       end: string;
       priority: string;

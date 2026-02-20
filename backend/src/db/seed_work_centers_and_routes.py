@@ -33,6 +33,7 @@ from backend.core.models.enums import ProductType, WorkCenterStatus
 # UUID рабочих центров (совпадают с FG_PRODUCTS_AND_ROUTES.md)
 WC_IDS = {
     "REACTOR": UUID("00000000-0000-0000-0000-000000000001"),
+    "MIXER": UUID("00000000-0000-0000-0000-000000000010"),  # Миксер (электромешалка, куб 1 м³)
     "TUBE_LINE": UUID("00000000-0000-0000-0000-000000000002"),
     "FILL_LINE_1": UUID("00000000-0000-0000-0000-000000000003"),
     "FILL_LINE_2": UUID("00000000-0000-0000-0000-000000000004"),
@@ -59,6 +60,18 @@ def seed_work_centers(db: Session) -> None:
             capacity_units_per_hour=100.0,
             batch_capacity_kg=2000.0,
             cycles_per_shift=2,
+            parallel_capacity=1,
+            created_at=now,
+            updated_at=now,
+        ),
+        WorkCenter(
+            id=WC_IDS["MIXER"],
+            name="WC_MIXER",
+            resource_type="MACHINE",
+            status=WorkCenterStatus.AVAILABLE,
+            capacity_units_per_hour=150.0,
+            batch_capacity_kg=1000.0,  # Куб 1 м³
+            cycles_per_shift=3,
             parallel_capacity=1,
             created_at=now,
             updated_at=now,

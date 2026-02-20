@@ -12,25 +12,19 @@ interface PriorityFiltersProps {
   onChange: (priorities: Priority[]) => void;
 }
 
-const priorityLabels: Record<Priority, string> = {
+export const priorityLabels: Record<Priority, string> = {
   URGENT: 'Срочно',
   HIGH: 'Высокий',
   NORMAL: 'Обычный',
   LOW: 'Низкий',
 };
 
-const priorityColors: Record<Priority, string> = {
-  URGENT: 'bg-red-500 hover:bg-red-600',
-  HIGH: 'bg-orange-500 hover:bg-orange-600',
-  NORMAL: 'bg-blue-500 hover:bg-blue-600',
-  LOW: 'bg-gray-500 hover:bg-gray-600',
-};
-
-const priorityColorsActive: Record<Priority, string> = {
-  URGENT: 'bg-red-700 ring-2 ring-red-300',
-  HIGH: 'bg-orange-700 ring-2 ring-orange-300',
-  NORMAL: 'bg-blue-700 ring-2 ring-blue-300',
-  LOW: 'bg-gray-700 ring-2 ring-gray-300',
+/** Цвета кнопок как во вкладке MRP: выбран — цветной фон, не выбран — серый. */
+const priorityButtonClasses: Record<Priority, string> = {
+  URGENT: 'bg-red-600 text-white',
+  HIGH: 'bg-orange-500 text-white',
+  NORMAL: 'bg-blue-600 text-white',
+  LOW: 'bg-gray-600 text-white',
 };
 
 export const PriorityFilters: React.FC<PriorityFiltersProps> = ({
@@ -46,21 +40,21 @@ export const PriorityFilters: React.FC<PriorityFiltersProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2 items-center">
       {(Object.keys(priorityLabels) as Priority[]).map((priority) => {
         const isSelected = selectedPriorities.includes(priority);
         return (
           <button
             key={priority}
+            type="button"
             onClick={() => togglePriority(priority)}
-            className={`px-4 py-2 rounded-md text-white font-medium transition-all ${
-              isSelected
-                ? priorityColorsActive[priority]
-                : priorityColors[priority]
+            className={`px-3 py-1.5 rounded text-sm font-medium ${
+              isSelected ? priorityButtonClasses[priority] : 'bg-gray-200 text-gray-500'
             }`}
             title={`${isSelected ? 'Снять' : 'Выбрать'} фильтр по приоритету "${priorityLabels[priority]}"`}
           >
             {priorityLabels[priority]}
+            {isSelected ? ' ✓' : ''}
           </button>
         );
       })}
