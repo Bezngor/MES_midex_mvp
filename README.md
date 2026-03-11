@@ -1,3 +1,5 @@
+**Language:** [English](README.md) | [Русский](README.ru.md)
+
 # MES Platform Template v2.1.0 🏭
 
 > **This is a template repository.** Use it to create custom MES implementations for your factory.
